@@ -1,0 +1,178 @@
+---
+title: "Report: Correlation analysis"
+output: 
+  pdf_document:
+    latex_engine: pdflatex
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: show
+always_allow_html: yes
+params:
+  outfolder: ""
+  pdata: ""
+  covclass: ""
+  rthreshold: ""
+  pvalthreshold: ""
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+---
+In this document are reported the result of the correlation analysis of the numerical attributes reported in the **`r basename(params$pdata)`** file.
+
+```{r setup, echo=FALSE, message=FALSE, warning=FALSE, results="asis", comment=NA}
+knitr::opts_chunk$set(echo = TRUE)
+library("ggplot2")
+library("corrplot")
+library("Hmisc")
+library("dplyr")
+```
+
+```{r reading, echo=FALSE, message=FALSE, warning=FALSE, results="asis", comment=NA}
+# Output folder creation
+outf = paste0(params$outfolder, "02_Sample_Data_Analysis/")
+dir.create(outf)
+
+# Table containing the sample attributes
+phenoData <- read.delim(params$pdata, row.names=1, check.names = F)
+
+# List reporting the class of each sample attribute
+covariates <- read.delim(params$covclass)
+```
+
+```{r setclass, echo=FALSE, message=FALSE, warning=FALSE, results="asis", comment=NA} 
+#### Defining the class of the sample attribute
+  for(i in 1:ncol(phenoData)){
+    if(as.character(covariates[,2][i]) == "factor"){
+      phenoData[, i] = as.factor(phenoData[, i])}
+    else{
+      class(phenoData[, i]) = as.character(covariates[,2][i])}
+  }
+```
+
+```{r norm, echo=FALSE, message=FALSE, warning=FALSE, results="asis", comment=NA}
+# Isolation of the numeric sample attributes
+phenoData_num <- phenoData[,unlist(lapply(phenoData, is.numeric))]
+phenoData_num <- phenoData_num %>% select_if(~ length(unique(.)) > 1)
+
+# Definition of function for correlation matrix reformat
+flattenCorrMatrix <- function(cormat, pmat) {
+  ut <- upper.tri(cormat)
+  data.frame(
+    row = rownames(cormat)[row(cormat)[ut]],
+    column = rownames(cormat)[col(cormat)[ut]],
+    cor  =(cormat)[ut],
+    p = pmat[ut])}
+
+cat("The correlation analysis was perfomed on **", ncol(phenoData_num), "** numerical attributes.\n\n", sep="")
+
+lab <- c("Row attribute", "Column attribute", "Correlation coefficient", "p-value", "BH-adjusted p-value")
+```
+
+```{r functions, echo=FALSE, message=FALSE, warning=FALSE, results="asis", comment=NA}
+# Definition of a function for the scatterplot
+scatterplot <- function(dat, id1, id2, coeff, covid, inlinep=FALSE){
+  
+  p <- ggplot(data=dat, aes(x=id1, y=id2, fill=Var2)) + 
+    geom_point() +
+    geom_smooth(method = "lm")+
+    labs(y="Fraction of sample", x="Sample classes", fill=covid) + 
+    theme_bw() + 
+    scale_fill_viridis(discrete=T)
+  
+  if(inlinep==TRUE){print(p)}
+  printout(paste0(outf,paste0("Correlation_Plot_Scatterplot_correlation_", id1, "_", id2,".pdf"), p))}
+```
+
+```{r pearson, echo=FALSE, message=FALSE, warning=FALSE, results="asis", comment=NA}
+cat("## Pearson correlation analysis\n\n")
+
+# Pearson correlation
+res_p <- rcorr(as.matrix(phenoData_num), type="pearson")
+out_p <- flattenCorrMatrix(res_p$r, res_p$P)
+adj_p <- p.adjust(out_p$p, method="BH")
+out_p <- cbind(out_p, adj_p)
+names(out_p) <- lab
+sig_p <- subset(out_p, out_p$`BH-adjusted p-value` < params$pvalthreshold & abs(out_p$`Correlation coefficient`) > params$rthreshold)
+sig_p <- arrange(sig_p, sig_p$`BH-adjusted p-value`, desc(abs(sig_p$`Correlation coefficient`)))
+
+cat("Using the Pearson's correlation method, **", nrow(sig_p), "** pair(s) of attributes were significantly correlated.\n\n", sep="")
+
+if(nrow(sig_p)>0){
+cat("The following list reports the significant pairs of attributes associated with a significant result from the correlation analysis using the Pearson's method. The significant results are associated with a correlation coefficent greater than **", params$rthreshold, "** and an adjusted p-value lower than **", params$pvalthreshold, "**.\n\n", sep="")
+
+cat(paste(sig_p[,1], sig_p[,2], sep="\tAND\t"), sep="\n\n")
+
+cat('\\pagebreak')
+  
+cat("\n\nThe result of this analysis were provided with the files:\n\n **Correlation_Table_Attributes_Pearson_correlation_all.txt**\n\n **Correlation_Table_Attributes_Pearson_correlation_significant.txt**.\n\n", sep="")  
+}
+
+write.table(out_p, paste0(outf, "Correlation_Table_Attributes_Pearson_correlation_all.txt"), quote=F, row.names=F, sep="\t")
+
+write.table(sig_p, paste0(outf, "Correlation_Table_Attributes_Pearson_correlation_significant.txt"), quote=F, row.names=F, sep="\t")
+
+cat("The following plot represent all the correlation coefficients computed using the Pearson's method.\n\n This plot was provided as pdf file named **Correlation_Plot_Corrplot_Spearman_correlation.pdf**.\n\n", sep="")
+```
+
+```{r pears, echo=FALSE, message=FALSE, warning=FALSE, results="hide", comment=NA}
+corrplot(res_p$r, order="hclust", hclust.method = "ward.D2", type="upper", col = viridis::viridis(100), tl.srt=45, tl.col="black", tl.cex = 0.5)
+dev.off()
+
+pdf(file=paste0(outf,"Correlation_Plot_Corrplot_Pearson_correlation.pdf"))
+corrplot(res_p$r, order="hclust", hclust.method = "ward.D2", type="upper", col = viridis::viridis(100), tl.srt=45, tl.col="black", tl.cex = 0.5)
+dev.off()
+```
+
+\pagebreak
+
+```{r spearman, echo=FALSE, message=FALSE, warning=FALSE, results="asis", comment=NA}
+cat("## Spearman correlation analysis\n\n")
+
+# Spearman correlation
+res_s <- rcorr(as.matrix(phenoData_num), type="spearman")
+out_s <- flattenCorrMatrix(res_p$r, res_p$P)
+adj_s <- p.adjust(out_s$p, method="BH")
+out_s <- cbind(out_s, adj_s)
+names(out_s) <- lab
+sig_s <- subset(out_s, out_s$`BH-adjusted p-value` < params$pvalthreshold & abs(out_s$`Correlation coefficient`) > params$rthreshold)
+sig_s <- arrange(sig_s, sig_p$`BH-adjusted p-value`, desc(abs( sig_s$`Correlation coefficient`)))
+
+cat("Using the Spearman's correlation method, **", nrow(sig_s), "** pair(s) of attributes were significantly correlated.\n\n", sep="")
+
+if(nrow(sig_s)>0){
+cat("The following list reports the significant results from the correlation analysis using the Spearman's method. The significant results are associated with a correlation coefficent greater than **", params$rthreshold, "** and an adjusted p-value lower than **", params$pvalthreshold, "**.\n\n", sep="")
+    
+cat(paste(sig_s[,1], sig_s[,2], sep="\tAND\t"), sep="\n\n")
+
+cat('\\pagebreak')
+
+cat("\n\nThe result of this analysis were provided with the files:\n\n **Correlation_Table_Attributes_Spearman_correlation_all.txt**\n\n **Correlation_Table_Attributes_Spearman_correlation_significant.txt**.\n\n", sep="") 
+
+cat("The following plot represent all the correlation coefficients computed using the Spearman's method.\n\n This plot was provided as pdf file named **Correlation_Plot_Corrplot_Spearman_correlation.pdf**.\n\n", sep="")
+}
+
+# Write of the output file
+write.table(out_s, paste0(outf, "Correlation_Table_Attributes_Spearman_correlation_all.txt"), quote=F, row.names=F, sep="\t")
+
+write.table(sig_s, paste0(outf, "Correlation_Table_Attributes_Spearman_correlation_significant.txt"), quote=F, row.names=F, sep="\t")
+```
+
+```{r spear, echo=FALSE, message=FALSE, warning=FALSE, results="hide", comment=NA}
+corrplot(res_s$r, order="hclust", hclust.method = "ward.D2", type="upper", col = viridis::viridis(100), tl.srt=45, tl.col="black", tl.cex = 0.5)
+dev.off()
+
+pdf(file=paste0(outf,"Correlation_Plot_Corrplot_Spearman_correlation.pdf"))
+corrplot(res_s$r, order="hclust", hclust.method = "ward.D2", type="upper", col = viridis::viridis(100), tl.srt=45, tl.col="black", tl.cex = 0.5)
+dev.off()
+```
+
+## Output files
+The following output files were generated:
+
+* Correlation_Table_Attributes_Pearson_correlation_all.txt
+* Correlation_Table_Attributes_Pearson_correlation_significant.txt
+* Correlation_Table_Attributes_Spearman_correlation_all.txt
+* Correlation_Table_Attributes_Spearman_correlation_significant.txt
+* Correlation_Plot_Corrplot_Pearson_correlation.pdf
+* Correlation_Plot_Corrplot_Spearman_correlation.pdf
+
+All the output file were generated in the folder **02_Attribute_Analysis**

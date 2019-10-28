@@ -1,0 +1,321 @@
+---
+title: "Report: Attribute analysis"
+output: 
+  pdf_document:
+    latex_engine: pdflatex
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: show
+always_allow_html: yes
+df_print: kable
+params:
+  outfolder: ""
+  pdata: ""
+  covclass: ""
+  refcov: ""
+  covord: ""
+---
+In this document are reported the result of the analysis of the samples attributes reported in the **`r basename(params$pdata)`** file.
+
+```{r setup, include=FALSE, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+knitr::opts_chunk$set(echo = TRUE)
+library("dplyr")
+library("ggplot2")
+library("reshape")
+library("ggpubr")
+library("viridis")
+```
+
+```{r reading, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+# Output folder creation
+outf = paste0(params$outfolder, "02_Sample_Data_Analysis/")
+dir.create(outf)
+
+# Table containing the sample attributes
+phenoData <- read.delim(params$pdata, row.names=1, check.names = F)
+
+# List reporting the class of each sample attribute
+covariates <- read.delim(params$covclass)
+
+# Identification of the levels of the reference sample attribute
+refcov <- params$refcov
+cov_class <- levels(phenoData[,refcov])
+
+# Definition of all possible combinations of the reference sample attribute levels
+comparisons <- combn(cov_class, m=2)
+totest_p <- list()
+for(i in 1:ncol(comparisons)){totest_p[[i]] <- comparisons[,i] }
+
+#Set the order of sample classes in the plots
+covord <- params$covord
+if(length(covord) == 1){covord = cov_class}
+phenoData[,refcov] <- factor(phenoData[,refcov], levels = covord)
+```
+
+```{r setclass, echo=FALSE, message=FALSE, warning=FALSE, results='asis'} 
+#### Defining the class of the sample attribute
+  for(i in 1:ncol(phenoData)){
+    if(as.character(covariates[,2][i]) == "factor"){
+      phenoData[, i] = as.factor(phenoData[, i])}
+    else{
+      class(phenoData[, i]) = as.character(covariates[,2][i])}
+  }
+```
+
+```{r compade, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+# Check reference attribute
+if(refcov %in% names(phenoData)){
+  cat(paste0("The ", refcov, " attribute is included in the sample attributes.\n\n"), sep="")}else{
+  cat(paste0("The ", refcov, " attribute is not included in the sample attributes.\n\n"))
+  stop("The indicated reference attribute was not found")}
+
+# Check order of attributes
+if(sum(covord %in% phenoData[,refcov]) == length(covord)){
+  cat(paste0("The ", paste0(covtomodel, collapse = ", "), " attribute(s) is/are included in the sample attributes.\n\n"), sep="")}else{
+  cat(paste0("The  ", paste0(setdiff(covord, phenoData[,refcov]), collapse = ", "), " is/are not included in the sample attributes.\n\n"))
+  stop("One or more classes is/are not included in the samples classes")}
+```
+
+## Analysis among all the sample classes
+
+**`r ncol(phenoData)`** attributes are analysed considering **`r length(cov_class)`** classes of the **`r refcov`** attribute which is used as reference. The attributes are initially analysed using chi-square test for categorical attibutes while ANOVA or Kruskal-Wallis test is applied on continuous attributes. The selection of the test applied on continuous attributes is based on the result of the normality analysis performed using the Shapiro-Wilk test.
+
+```{r testdiff, echo=FALSE, message=FALSE, warning=FALSE, results='asis'} 
+
+# Definition of the output data
+out <- matrix(NA, nrow=ncol(phenoData), ncol = length(cov_class)+1)
+colnames(out) <- c(cov_class, "p.value")
+rownames(out) <- names(phenoData)
+
+# Analysis cycled on each sample attribute
+for(j in 1:ncol(phenoData)){
+    
+    totest <- data.frame(Data = phenoData[,j], refcov = phenoData[,refcov], check.names=F)
+    totest <- totest[complete.cases(totest),]  
+  
+    # Chi-square analysis and summary of categorical attributes
+    if(class(phenoData[,j]) == "factor"){
+      
+      # Chi-square test
+      out[j,-1] <- chisq.test(table(totest$Data,totest$refcov))$p.value
+      
+      # Summary of the attribute classes distribution
+      for(i in 1:length(cov_class)){
+        class <- cov_class[i]
+        tosum <- subset(totest, totest$refcov == class)
+        out[j,i] <- toString(paste(names(summary(tosum$Data)), summary(tosum$Data), sep="="))
+        }}
+    
+    # Kruskal-Wallis or ANOVA test and summary for numerical attributes    
+    if(class(phenoData[,j]) == "numeric" | class(phenoData[,j]) == "double" | class(phenoData[,j]) == "integer"){
+      
+      # Normality test
+      normaltest <- shapiro.test(totest$Data)$p.value
+      
+      # Kruskal-Wallis test for non-normally distributed attributes
+      if(normaltest < 0.05){out[j,-1] <- kruskal.test(totest$Data~totest$refcov)$p.value}
+      
+      # ANOVA for normally distributed attributes
+      else{out[j,-1] <- anova(lm(totest$Data~totest$refcov))$'Pr(>F)'[1]}
+      
+      # Summary of the numerical attributes
+      for(i in 1:length(cov_class)){
+        class <- cov_class[i]
+        tosum <- subset(totest, totest$refcov == class)
+        avg1 <- round(mean(tosum$Data),2)
+        sd1 <- round(sd(tosum$Data),2)
+        out[j,i] <- paste(avg1, sd1, sep=" +/- ")}}}
+
+res <- data.frame(Attribute=row.names(out), out, check.names=F, row.names = NULL)
+res <- res %>% filter(Attribute != refcov)
+
+res$p.value <- as.numeric(levels(res$p.value))[res$p.value]
+
+# Output writing
+write.table(res, paste0(outf,"Attribute_analysis_Table_Differential_attribute_among_groups.tsv"), sep="\t", quote=F, row.names=FALSE)
+significant <- res %>% filter(p.value < 0.05)
+
+if(nrow(significant) > 0){ 
+  out <- paste0("The following **", nrow(significant), "** attribute(s) is/are significantly different (p-value < 0.05) among the sample classes:")}else{
+  out <- paste0("None sample attribute is significantly different (p-value < 0.05) among the sample classes.")}
+```
+
+```{r covplot, echo=FALSE, message=FALSE, warning=FALSE} 
+
+# Definition of a function for plotting
+printout <- function(name, plot){
+    pdf(file=name)
+    print(plot)  
+    dev.off()
+}
+
+# Definition of a function for the stacked bar plot
+stackedbar <- function(dat, covid, inlinep=FALSE){
+  p <- ggplot(data=dat, aes(x=Var1, y=Freq, fill=Var2)) + geom_bar(stat="identity") + labs(y="Fraction of sample", x="Sample classes", fill=covid) + theme_bw() + scale_fill_viridis(discrete=T)
+  if(inlinep==TRUE){print(p)}
+  printout(paste0(outf,"Attribute_analysis_Plot_Stacked_barplot_", covid, ".pdf"), p)}
+
+# Definition of a function for the grouped bar plot
+groupedbar <- function(dat, covid, inlinep=FALSE){
+    p <- ggplot(data=dat, aes(x=Var1, y=Freq, fill=Var2)) + geom_bar(stat="identity", position = position_dodge(0.9)) + labs(y=covid, x="Sample classes", fill=covid) + theme_bw() + scale_fill_viridis(discrete=T)
+  if(inlinep==TRUE){print(p)}
+  printout(paste0(outf,"Attribute_analysis_Plot_Grouped_barplot_", covid, ".pdf"), p)}
+
+# Definition of a function for the box plot
+boxp <- function(dat, covid, refcov, inlinep=FALSE){
+  
+  newlimit <- max(dat$value, na.rm = T) + IQR(dat$value, na.rm = T)
+  
+  p <- ggplot(dat, aes(x=dat[,1], y=value, fill=dat[,1]))+
+  geom_violin(trim=FALSE, alpha=0.5) + 
+  geom_jitter(position = position_jitter(0.2), aes(fill=dat[,1]), shape=21) + 
+  geom_boxplot(width = 0.05, fill="white", outlier.alpha = 0) +
+  labs(y=paste0("log10(", covid, ")"), x=refcov, fill=refcov)  + 
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5)) +
+  expand_limits(y = newlimit) + 
+  scale_fill_viridis(discrete=T) + 
+  stat_compare_means(comparisons = totest_p, label = "p.signif", method = "wilcox.test", hide.ns=F)
+  
+  if(inlinep==TRUE){print(p)}
+  printout(paste0(outf, "Attribute_analysis_Plot_Boxplot_", covid, ".pdf"), p)}
+
+#Definition of a function for plotting a set of attributes
+checkandplot <- function(dat, n=1, inline=FALSE){
+  
+  for(j in 1:n){
+  covid <- as.character(dat$Attribute[j])
+  totest <- phenoData[,c(refcov, covid)]
+  totest[,refcov] <- factor(totest[,refcov], levels = covord)
+  
+  # Bar plot of categorical attributes
+  if(class(totest[,2]) == "factor"){
+    toplot <- data.frame(table(totest[,1],totest[,2]))    
+    toplot_rel <- data.frame(table(totest[,1],totest[,2])/rowSums(table(totest[,1],totest[,2])))
+    stackedbar(toplot_rel, covid, inlinep=inline)
+    groupedbar(toplot_rel, covid, inlinep=inline)}
+  
+  # Violin and Box plot of continuous attributes
+  if(class(totest[,2]) == "numeric" || class(totest[,2]) == "integer" || class(totest[,2]) == "double"){
+    
+    totest[,2] <- log10(totest[,2]+1)
+    mm <- melt(totest, id.vars = refcov, na.rm=T)
+    boxp(mm, covid, refcov, inlinep=inline)}}
+}
+
+if(nrow(significant) > 0){
+# In line plot of the three most significant attributes
+significant <- arrange(significant, p.value)
+
+# Output plots for all the significant attributes
+checkandplot(significant, n=nrow(significant), inline=FALSE)
+}
+```
+`r out`
+
+```{r printtop1, echo=FALSE, message=FALSE, warning=FALSE, results="asis"}
+if(nrow(significant) > 0){
+  cat("The following plot reports the result for the most significantly different attribute.  \n  \n")
+  checkandplot(significant, n=1, inline=TRUE)}
+```
+\pagebreak
+
+## Analysis between pair of sample classes
+
+**`r ncol(phenoData)`** attributes are analysed considering **`r ncol(comparisons)`** pair(s) of sample classes. The attributes are analysed using chi-square test for categorical attibutes while t-test or Wilcoxon Rank-Sum test is applied on continuous attributes. The selection of the test applied on continuous attributes is based on the result of the normality analysis performed using the Shapiro-Wilk test.
+
+```{r pairedanalysis, echo=FALSE, message=FALSE, warning=FALSE, results='asis'} 
+# The analysis is cycled on each pair of the reference attribute levels
+
+for(i in 1:ncol(comparisons)){
+  
+  cov1 = comparisons[1,i]
+  cov2 = comparisons[2,i]
+  
+  # Data subsetting
+  phenoData_part <- subset(phenoData, phenoData[refcov] == cov1 | phenoData[refcov] == cov2)
+  phenoData_part[, refcov] <- factor(phenoData_part[, refcov])
+  
+  # Definition empty output data
+  pvalue <- rep(NA, ncol(phenoData))
+  Summary_cov1 <- rep(NA, ncol(phenoData))
+  Summary_cov2 <- rep(NA, ncol(phenoData))
+  
+  # Definition the colname of the output data
+  names(pvalue) <- colnames(phenoData)
+  names(Summary_cov1) <- colnames(phenoData)
+  names(Summary_cov2) <- colnames(phenoData)
+  
+  # Analysis cycled on each covariate
+  for(j in 1:ncol(phenoData)){
+    
+    # Selection of the atrribute to test
+    totest <- data.frame(Data = phenoData_part[,j], refcov = phenoData_part[,refcov])
+    totest <- totest[complete.cases(totest),]  
+    totest_c1 <- subset(totest, totest[,"refcov"]==cov1)
+    totest_c2 <- subset(totest, totest[,"refcov"]==cov2)
+    
+    # Chi-square analysis and summary of categorical attributes
+    if(class(phenoData[,j]) == "factor"){
+      
+      # Chi-square test
+      pvalue[j] <- chisq.test(table(totest[,1],totest[,2]))$p.value
+      
+      # Summary of the attribute classes distribution
+      Summary_cov1[j] = toString(paste(names(summary(totest_c1[,1])), summary(totest_c1[,1]), sep="="))
+      Summary_cov2[j] = toString(paste(names(summary(totest_c2[,1])), summary(totest_c2[,1]), sep="="))}
+    
+    # Wilcoxon Rank Sum analysis or t-test and summary for numerical attributes
+    if(class(phenoData[,j]) == "numeric" | class(phenoData[,j]) == "double" | class(phenoData[,j]) == "integer"){
+      
+      # Normality test
+      normaltest <- shapiro.test(phenoData[,j])$p.value
+      
+      # Wilcoxon Rank-Sum test for non-normally distributed attributes
+      if(normaltest < 0.05){pvalue[j] <- wilcox.test(totest[,1]~totest[,2])$p.value}
+      
+      # t-test for normally distributed attributes
+      else{pvalue[j] <- t.test(totest[,1]~totest[,2])$p.value}
+      
+      # Summary of the numerical attributes
+      avg1 <- round(mean(totest_c1[,1]),2)
+      avg2 <- round(mean(totest_c2[,1]),2)
+      sd1 <- round(sd(totest_c1[,1]),2)
+      sd2 <- round(sd(totest_c2[,1]),2)
+      Summary_cov1[j] = paste(avg1, sd1, sep=" +/- ")
+      Summary_cov2[j] = paste(avg2, sd2, sep=" +/- ")}}
+  
+  # Creation of the output data
+  res <- data.frame(Attribute=names(phenoData), Summary_cov1, Summary_cov2, pvalue, check.names=F, row.names = NULL)
+  res <- res %>% filter(Attribute != refcov)
+  names(res) <- c("Attribute", cov1, cov2, "p.value")
+
+  # Output writing
+  write.table(res, paste0(outf,"Attribute_analysis_Table_Different_attribues_", cov1, "_vs_", cov2, ".tsv"), sep="\t", quote=F, row.names=FALSE)
+
+significant <- res %>% filter(p.value < 0.05)
+  
+if(nrow(significant) > 0){
+  out <- paste0("  \n  \n**", nrow(significant), "** attribute(s) is/are significantly different (p-value < 0.05) between ", cov1, " and ", cov2, " samples.  \n  \n")}else{
+  out <- paste0("  \n  \nNone attribute is significantly different (p-value < 0.05) between ", cov1, " and ", cov2, " samples.  \n  \n")}
+  cat(out)
+  
+if(nrow(significant) > 0){
+  significant <- arrange(significant, p.value)
+  cat("  \n  \nThe following plot reports the result for the most significantly different attribute between ", cov1, " and ", cov2, " samples:", significant$Attribute[1]," \n  \n")
+  checkandplot(significant, n=1, inline=TRUE)}}
+```
+
+An output file named **Attribute_analysis_Table_Differential_attributes_(class1)_vs_(class2).tsv** is provided were "class1" and "class2" are substituted with the names of classes compared.
+
+## Output files
+The following output files were generated:
+
+* Attribute_analysis_Table_Differential_attributes_among_groups.tsv
+* Attribute_analysis_Table_Differential_attributes_(class1)_vs_(class2).tsv (class1, class2 = classes compared)
+* Attribute_analysis_Plot_Stacked_barplot_(attribute_id).pdf (attribute_id = attribute plotted)
+* Attribute_analysis_Plot_Grouped_barplot_(attribute_id).pdf (attribute_id = attribute plotted)
+* Attribute_analysis_Plot_Boxplot_(attribute_id).pdf (attribute_id = attribute plotted)
+
+All the output file were generated in the folder **02_Sample_Data_Analysis**

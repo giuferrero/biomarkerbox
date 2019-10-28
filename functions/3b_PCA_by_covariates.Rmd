@@ -1,0 +1,132 @@
+---
+title: "Report: Principal Component Analysis (PCA)"
+output: 
+  pdf_document:
+    latex_engine: pdflatex
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: show
+always_allow_html: yes
+params:
+  outfolder: ""
+  pdata: ""
+  cdata: ""
+  covclass: ""
+  refcov: ""
+  covord: ""
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+---
+
+In this document are reported the result of the Principal Component Analysis (PCA) performed on the **`r basename(params$cdata)`** file.
+
+```{r setup, include=FALSE, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library("RColorBrewer")
+library("gplots")
+library("ggplot2")
+library("ggfortify")
+library("factoextra")
+```
+
+```{r reading, echo=FALSE, message=FALSE, warning=FALSE, results="asis"}
+# Output folder creation
+outf = paste0(params$outfolder, "02_Attribute_Analysis/")
+dir.create(outf)
+
+# Table containing the covariates
+phenoData <- read.delim(params$pdata, row.names=1, check.names = F)
+
+# Table containing the count data
+countData <- read.delim(params$cdata, row.names=1, check.names = F)
+
+# List reporting the class of each sample attribute
+covariates <- read.delim(params$covclass)
+
+# Identification of the levels of the reference covariate
+cov_class <- levels(phenoData[,params$refcov])
+
+#Set the order of sample classes in the plots
+covord <- params$covord
+refcov <- params$refcov
+if(length(covord) == 1){covord = cov_class}
+phenoData[,refcov] <- factor(phenoData[,refcov], levels = covord)
+```
+
+```{r setclass, echo=FALSE, message=FALSE, warning=FALSE, results="asis"} 
+#### Defining the class of the sample attribute
+  for(i in 1:ncol(phenoData)){
+    if(as.character(covariates[,2][i]) == "factor"){
+      phenoData[, i] = as.factor(phenoData[, i])}
+    else{
+      class(phenoData[, i]) = as.character(covariates[,2][i])}
+  }
+```
+
+## PCA analysis using the count data
+The input count table was preprocessed by removing attributes associated with a zero count in each sample. The count are then log transformed and PCs were computed using zero-centered and Z-score-transformed data.
+
+```{r pcac, echo=FALSE, message=FALSE, warning=FALSE, results="asis", comment=NA} 
+### Preprocessing of the count table
+countData <- countData[, row.names(phenoData)]
+countData <- round(countData, 0)
+countData <- countData[rowSums(countData) > 0, ]
+
+### PC computation
+cdatat <- data.frame(t(countData), check.names = F)
+cdata.pca<-prcomp(log(cdatat+1,2), center=T, scale=T)
+
+imp <- summary(cdata.pca)$importance
+
+cat("The first principal component explain **", paste0(imp[2,1]*100, "%"),"** of the variance in the data while the second principal component explain **", paste0(imp[2,2]*100, "%"),"** of the variance.\n\n", sep="")
+
+write.table(imp, paste0(outf, "PCA_Table_PC_count_data_importance.txt"), sep="\t", quote=F, col.names=NA)
+
+cat("The file named **PCA_Table_PC_Count_Data_Importance.txt** was provided. This file report the proportion of variance explained by each principal component.", sep="")
+
+## Generation of the Scree plot
+cat("The following Scree plot report the contribution of the first components. This plot was saved as **PCA_Plot_Count_data_screeplot.pdf**. \n \n \n", sep="")
+
+p <- fviz_eig(cdata.pca, ggthem = theme_bw(), main=NULL)
+print(p)
+
+pdf(file=paste0(outf,"PCA_Plot_Count_data_screeplot.pdf"))
+print(p)
+dev.off()
+
+## Generation of PCA plots colored by the reference attribute
+cat("\n\nThe following plot report the result of the PCA colored by the reference sample attribute **", refcov,"**. \n\n", sep="")
+    
+cov <- phenoData[,refcov]
+dat <- data.frame(cbind(cov, cdatat), check.names=F)
+names(dat)[1] <- refcov
+
+outplot <- autoplot(cdata.pca, data = dat, colour = refcov, size=3.5) + theme_bw() + theme(legend.position="top")
+print(outplot)
+
+## Generation of PCA plots colored by the different attributes
+cat("A PCA plot was provided applying a color-code based on each sample attribute. Each file was names **PCA_Plot_PCA_count_data_colored_by_(attribute_id).pdf** where attribute_id indicates the specific sample attribute using for coloring the plot. \n \n", sep="")
+
+for(i in 1:ncol(phenoData)){
+	
+  cov <- phenoData[,i]
+  tempdf <- data.frame(phenoData)
+  covid <- names(tempdf)[i]
+  covid2 <- names(phenoData)[i]
+  dat <- data.frame(cbind(cov, cdatat), check.names=T)
+  names(dat)[1] <- covid
+    
+	pdf(paste0(outf,"PCA_Plot_PCA_count_data_colored_by_", covid2, ".pdf"), 7, 7)
+	outplot <- autoplot(cdata.pca, data = dat, colour=covid, size=3.5, na.value = "gray") + theme_bw() + theme(legend.position="top") + labs(colour=covid2)
+	print(outplot)
+	dev.off()}
+```
+
+## Output files
+The following output files were generated:
+
+* PCA_Table_PC_count_data_importance.txt
+* PCA_Plot_Count_data_screeplot.pdf
+* PCA_Plot_PCA_count_Data_colored_by_(attribute id).pdf (attribute id = attribute used for the analysis)
+
+All the output file were generated in the folder **02_Attribute_Analysis**
