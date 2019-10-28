@@ -1,0 +1,152 @@
+---
+title: "Report: Data quality control"
+output: 
+  pdf_document:
+    latex_engine: pdflatex
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: show
+always_allow_html: yes
+params:
+  outfolder: ""
+  pdata: ""
+  cdata: ""
+  covclass: ""
+  refcov: ""
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+---
+
+In this document are reported the quality control analyses of the sample and the count table.
+
+```{r reading, echo=FALSE, message=FALSE, warning=FALSE}
+# Output folder creation
+outf = paste0(params$outfolder, "01_QC_and_Data_Preprocessing/")
+dir.create(outf)
+
+# Table containing the covariates
+phenoData <- read.delim(params$pdata, row.names=1, check.names = F)
+
+# Table containing the count data
+countData <- read.delim(params$cdata, row.names=1, check.names = F)
+
+# List reporting the class of each sample attribute
+covariates <- read.delim(params$covclass)
+
+# Identification of the levels of the reference covariate
+refcov <- params$refcov
+cov_class <- levels(phenoData[,refcov])
+```
+
+```{r setclass, echo=FALSE, message=FALSE, warning=FALSE} 
+#### Defining the class of the sample attribute
+  for(i in 1:ncol(phenoData)){
+    if(as.character(covariates[,2][i]) == "factor"){
+      phenoData[, i] = as.factor(phenoData[, i])}
+    else{
+      class(phenoData[, i]) = as.character(covariates[,2][i])}
+  }
+```
+
+```{r setup, include=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
+# Loading of the packages
+knitr::opts_chunk$set(echo = TRUE)
+library("dplyr")
+library("ggplot2")
+```
+
+## Description of the datasets
+The sample table stored in the **`r basename(params$pdata)`** file has **`r ncol(phenoData)`** attributes for **`r nrow(phenoData)`** samples.
+
+The count table stored in the **`r basename(params$cdata)`** file has **`r nrow(countData)`** attributes for **`r ncol(countData)`** samples.
+
+The reference sample attribute is **`r refcov`**. The reference attribute is divided in **`r length(cov_class)`** classes.
+
+```{r checkname, echo=FALSE, message=FALSE, warning=FALSE}
+# Control of the sample IDs in the datasets
+  checkname=0
+  if(ncol(countData) == nrow(phenoData) && sum(row.names(phenoData) %in% names(countData)) == ncol(countData)){
+  out = "The sample IDs in the two tables are the same."
+  checkname=1}else{
+  out = "The sample IDs in the two tables are not the same."
+  plack <- row.names(phenoData)[row.names(phenoData) %in% names(countData) == F]
+  clack <- names(countData)[names(countData) %in% row.names(phenoData) == F]
+  
+  if(length(clack) > 0){out=paste(out, "\nThe following ID(s) of the count table is/are not present in the samples table:\n ", paste(clack, collapse = ", "), sep="\n")}
+  if(length(plack) > 0){out=paste(out, "\nThe following ID(s) of the sample table is/are not present in the count table\n: ", paste(plack, collapse = ", "), sep="\n")}
+  }
+
+outhead <- "QC report: Sample consistency analysis\n"
+
+write.table(paste0(outhead, out), paste0(outf, "QC_Table_Sample_control.txt"), quote = F, row.names=F, col.names=F, sep="\t")
+```
+`r out`
+
+## Check for NA values
+The sample and count table were checked for NA values.
+```{r nacheck, echo=FALSE, message=FALSE, warning=FALSE}
+# Verification of NA content of the sample table
+checkna=0
+if(sum(is.na(phenoData)) == 0){  
+  outp <- "The sample table does not contain NA values."
+}else{
+  NAcolp <- names(phenoData)[colSums(is.na(phenoData))>0]
+  NArowp <- row.names(phenoData[rowSums(is.na(phenoData)) > 0,])
+  outp <- paste0("\nThe sample table contains at least one NA value in ", length(NAcolp), " attribute(s) for ", length(NArowp), " sample(s).")
+  outp <- paste(outp, "\nThe following attribute(s) in the sample data contain(s) at least one NA value:\n", paste(NAcolp, collapse=", "), sep="\n")
+  outp <- paste(outp, "\nThe following sample(s) in the sample data contain(s) at least one NA value:\n", paste(NArowp, collapse=", "), sep="\n") 
+}
+
+# Verification of NA content of the count table
+if(sum(is.na(countData)) == 0){  
+  outc <- "\n\nThe count table does not contain NA values."
+  checkna=1
+}else{
+  NAcolc <- names(countData)[colSums(is.na(countData))>0]
+  NArowc <- row.names(countData[rowSums(is.na(countData)) > 0,])
+  outc <- paste0("\nThe count table contains NA values in ", length(NArowc), " attribute(s) for ", length(NAcolc), " sample(s).")
+  outc <- paste(outc, "\nThe following attribute(s) in the count data contain(s) at least one NA value:\n", paste(NArowc, collapse=", "), sep="\n")
+  outc <- paste(outc, "\nThe following sample(s) in the count data contain(s) at least one NA value:\n", paste(NAcolc, collapse=", "), sep="\n") 
+}
+outhead <- "QC report: NA values analysis\n"
+
+# Write of the output file
+write.table(paste0(outhead, outp, outc), paste0(outf, "QC_Table_NA_report.txt"), quote=F, row.names=F, col.names=F, sep="\t")
+```
+`r paste(outp, outc, sep="\n")`
+
+## Check for the presence of non numeric values in the count table
+The count table is checked for the presence of non numeric data.
+```{r numericheck, echo=FALSE, message=FALSE, warning=FALSE}
+checknumeric = 0
+if(sum(!sapply(countData, is.numeric)) == 0){  
+  outc <- "The count table does not contain non numeric data."
+  checknumeric=1
+}else{
+  
+  Numcolc <- names(countData)[sapply(countData,class)=="factor"]
+  outc <- paste0("\nThe count table contains non numeric values in ", length(Numcolc), " sample(s).")
+  outc <- paste(outc, "\nThe following sample(s) in the count data contain(s) at least one non numeric value:\n", paste(Numcolc, collapse=", "), sep="\n") 
+}
+outhead <- "QC report: Non numeric count values analysis\n"
+
+# Write of the output file
+write.table(paste0(outhead, outc), paste0(outf, "QC_Table_Non_numeric_counts_report.txt"), quote=F, row.names=F, col.names=F, sep="\t")
+```
+`r paste(outc)`
+
+An output file named **QC_Table_Non_numeric_counts_report.txt** is provided with the summary of this analysis.
+
+```{r blockfile, echo=FALSE, message=FALSE, warning=FALSE}
+# If QC controls are passed a file named QC_passed.txt is generated.
+if(checkna==1 && checkname==1 && checknumeric==1){write.table("", paste0(outf, "QC_passed.txt")) }
+```
+
+## Output files
+The following output files were generated:
+
+* QC_Table_Sample_control.txt
+* QC_Table_NA_values_analysis.txt
+* QC_Table_Non_numeric_counts_report.txt
+
+All the output file were generated in the folder **01_QC_and_Data_Preprocessing**
