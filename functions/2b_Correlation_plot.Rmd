@@ -24,6 +24,7 @@ library("ggplot2")
 library("corrplot")
 library("Hmisc")
 library("dplyr")
+library("viridis")
 ```
 
 ```{r reading, echo=FALSE, message=FALSE, warning=FALSE, results="asis", comment=NA}
@@ -68,18 +69,23 @@ lab <- c("Row attribute", "Column attribute", "Correlation coefficient", "p-valu
 ```
 
 ```{r functions, echo=FALSE, message=FALSE, warning=FALSE, results="asis", comment=NA}
+# Definition of a function for export the plot
+printout <- function(name, plot){
+    pdf(file=name)
+    print(plot)  
+    invisible(dev.off())}
+
 # Definition of a function for the scatterplot
-scatterplot <- function(dat, id1, id2, coeff, covid, inlinep=FALSE){
-  
-  p <- ggplot(data=dat, aes(x=id1, y=id2, fill=Var2)) + 
+scatterplot <- function(dat, id1, id2, refcov, inlinep=FALSE){
+  p <- ggplot(data=dat, aes(x=dat[,id1], y=dat[,id2], col=phenoData[,refcov])) + 
     geom_point() +
-    geom_smooth(method = "lm")+
-    labs(y="Fraction of sample", x="Sample classes", fill=covid) + 
-    theme_bw() + 
-    scale_fill_viridis(discrete=T)
+    labs(y=id2, x=id1, col=refcov) + 
+    geom_smooth(method=lm, se=F) +
+    theme_bw()
   
   if(inlinep==TRUE){print(p)}
-  printout(paste0(outf,paste0("Correlation_Plot_Scatterplot_correlation_", id1, "_", id2,".pdf"), p))}
+  
+  printout(paste0(outf,paste0("Correlation_Plot_Scatterplot_", id1,"_", id2,".pdf")), p)}
 ```
 
 ```{r pearson, echo=FALSE, message=FALSE, warning=FALSE, results="asis", comment=NA}
@@ -100,8 +106,6 @@ if(nrow(sig_p)>0){
 cat("The following list reports the significant pairs of attributes associated with a significant result from the correlation analysis using the Pearson's method. The significant results are associated with a correlation coefficent greater than **", params$rthreshold, "** and an adjusted p-value lower than **", params$pvalthreshold, "**.\n\n", sep="")
 
 cat(paste(sig_p[,1], sig_p[,2], sep="\tAND\t"), sep="\n\n")
-
-cat('\\pagebreak')
   
 cat("\n\nThe result of this analysis were provided with the files:\n\n **Correlation_Table_Attributes_Pearson_correlation_all.txt**\n\n **Correlation_Table_Attributes_Pearson_correlation_significant.txt**.\n\n", sep="")  
 }
@@ -110,7 +114,12 @@ write.table(out_p, paste0(outf, "Correlation_Table_Attributes_Pearson_correlatio
 
 write.table(sig_p, paste0(outf, "Correlation_Table_Attributes_Pearson_correlation_significant.txt"), quote=F, row.names=F, sep="\t")
 
-cat("The following plot represent all the correlation coefficients computed using the Pearson's method.\n\n This plot was provided as pdf file named **Correlation_Plot_Corrplot_Spearman_correlation.pdf**.\n\n", sep="")
+cat("In the following are reported the scatter plot of the most significant correlation computed using the Pearson's method and as heat map all the correlation coefficients computed. The scatter plots of all the significant correlations are provided as pdf files with name **Correlation_Plot_Scatterplot_cov1_cov2.pdf** where cov1 and cov2 are the name of the correlated attributes. The heat map was provided as pdf file named **Correlation_Plot_Corrplot_Pearson_correlation.pdf**.\n\n", sep="")
+
+scatterplot(phenoData_num, as.character(sig_p[1,1]), as.character(sig_p[1,2]), refcov, inlinep=T)
+ 
+for(i in 1:nrow(sig_p)){
+scatterplot(phenoData_num, as.character(sig_p[i,1]), as.character(sig_p[i,2]), refcov, inlinep=F)}
 ```
 
 ```{r pears, echo=FALSE, message=FALSE, warning=FALSE, results="hide", comment=NA}
@@ -143,17 +152,20 @@ cat("The following list reports the significant results from the correlation ana
     
 cat(paste(sig_s[,1], sig_s[,2], sep="\tAND\t"), sep="\n\n")
 
-cat('\\pagebreak')
-
-cat("\n\nThe result of this analysis were provided with the files:\n\n **Correlation_Table_Attributes_Spearman_correlation_all.txt**\n\n **Correlation_Table_Attributes_Spearman_correlation_significant.txt**.\n\n", sep="") 
-
-cat("The following plot represent all the correlation coefficients computed using the Spearman's method.\n\n This plot was provided as pdf file named **Correlation_Plot_Corrplot_Spearman_correlation.pdf**.\n\n", sep="")
-}
+cat("\n\nThe result of this analysis were provided with the files:\n\n **Correlation_Table_Attributes_Spearman_correlation_all.txt**\n\n **Correlation_Table_Attributes_Spearman_correlation_significant.txt**.\n\n", sep="")  
+} 
 
 # Write of the output file
 write.table(out_s, paste0(outf, "Correlation_Table_Attributes_Spearman_correlation_all.txt"), quote=F, row.names=F, sep="\t")
 
 write.table(sig_s, paste0(outf, "Correlation_Table_Attributes_Spearman_correlation_significant.txt"), quote=F, row.names=F, sep="\t")
+
+cat("In the following are reported the scatter plot of the most significant correlation computed using the Spearman's method and as heat map all the correlation coefficients computed. The scatter plots of all the significant correlations are provided as pdf files with name **Correlation_Plot_Scatterplot_cov1_cov2.pdf** where cov1 and cov2 are the name of the correlated attributes. The heat map was provided as pdf file named **Correlation_Plot_Corrplot_Spearman_correlation.pdf**.\n\n", sep="")
+
+scatterplot(phenoData_num, as.character(sig_s[1,1]), as.character(sig_s[1,2]), refcov, inlinep=T)
+ 
+for(i in 1:nrow(sig_p)){
+scatterplot(phenoData_num, as.character(sig_s[i,1]), as.character(sig_s[i,2]), refcov, inlinep=F)}
 ```
 
 ```{r spear, echo=FALSE, message=FALSE, warning=FALSE, results="hide", comment=NA}
