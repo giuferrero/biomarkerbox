@@ -21,8 +21,8 @@ In this document are reported the quality control analyses of the sample and the
 
 ```{r reading, echo=FALSE, message=FALSE, warning=FALSE}
 # Output folder creation
-outf = paste0(params$outfolder, "01_QC_and_Data_Preprocessing/")
-dir.create(outf)
+setwd(params$outfolder)
+dir.create("01_QC_and_Data_Preprocessing")
 
 # Table containing the covariates
 phenoData <- read.delim(params$pdata, row.names=1, check.names = F)

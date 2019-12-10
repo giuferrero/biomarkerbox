@@ -37,8 +37,7 @@ library("EnhancedVolcano")
 printout <- function(name, plot){
     pdf(file=name)
     print(plot)  
-    dev.off()
-}
+    dev.off()}
 
 boxp <- function(dat, covid, refcov, inlinep=FALSE){
   
@@ -51,15 +50,15 @@ boxp <- function(dat, covid, refcov, inlinep=FALSE){
   theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5)) +
   scale_fill_viridis(discrete=T)
 
-  printout(paste0(outf, "DESeq_Plot_analysis_boxplot_", covid, ".pdf"), p)
+  printout(paste0("DESeq_Plot_analysis_boxplot_", covid, ".pdf"), p)
   
   if(inlinep==TRUE){print(p)}}
 ```
 
 ```{r reading, echo=FALSE, message=FALSE, warning=FALSE}
 # Output folder creation
-outf = paste0(params$outfolder, "03_Count_Data_Analysis/")
-dir.create(outf)
+setwd(params$outfolder)
+dir.create("03_Count_Data_Analysis")
 
 # Table containing the count data
 countData <- read.delim(params$cdata, row.names=1)
@@ -112,20 +111,17 @@ countData <- countData[rowSums(countData) > 0, ]
 # Check reference attribute
 if(refcov %in% names(phenoData)){
   cat(paste0("The ", refcov, " attribute is included in the sample attributes.\n\n"), sep="")}else{
-  cat(paste0("The ", refcov, " attribute is not included in the sample attributes.\n\n"))
-  stop("Exiting")}
+  stop(paste0("The ", refcov, " attribute is not included in the sample attributes.\n\n"))}
 
 # Check model attributes
 if(sum(covtomodel %in% names(phenoData)) == length(covtomodel)){
   cat(paste0("The ", paste0(covtomodel, collapse = ", "), " attribute(s) is/are included in the sample attributes.\n\n"), sep="")}else{
-  cat(paste0("The attribute(s) ", paste0(setdiff(covtomodel, names(phenoData)), collapse = ", "), " is/are not included in the sample attributes.\n\n"), sep="")
-  stop("Exiting")}
+  stop(paste0("One or more attributes selected in the model is not included in the sample attributes.\n\n"))}
 
-# Check order of attributes
+# Check order of classes
 if(sum(covord %in% phenoData[,refcov]) == length(covord)){
-  cat(paste0("The ", paste0(covtomodel, collapse = ", "), " attribute(s) is/are included in the sample attributes.\n\n"), sep="")}else{
-  cat(paste0("The  ", paste0(setdiff(covord, phenoData[,refcov]), collapse = ", "), " is/are not included in the sample attributes.\n\n"))
-  stop("Exiting")}
+  cat(paste0("The ", paste0(covtomodel, collapse = ", "), " attribute(s) is/are included in the sample classes.\n\n"), sep="")}else{
+  stop(paste0("One or more indicated classe is not included in the sample classes.\n\n"))}
 ```
 
 Attributes with zero counts in each sample were filtered out. A total of **`r nrow(countData)`** attributes were analyzed.
@@ -171,8 +167,8 @@ dds_complete <- DESeqDataSetFromMatrix(countData = countData, colData = phenoDat
  row.names(out) <- rownames(norm_counts)
  
 # Write the normalized count table and the table reporting the average and the median read counts
- write.table(data.frame("ID"=rownames(norm_counts), norm_counts), paste0(outf, "DESeq_Table_Normalized_count_table.txt"), sep="\t", quote=FALSE, row.names=F)
- write.table(data.frame("ID"=rownames(out), out), paste0(outf, "DESeq_Table_Median_average_normalized_counts.txt"), sep="\t", quote=FALSE, row.names=F)
+ write.table(data.frame("ID"=rownames(norm_counts), norm_counts), "DESeq_Table_Normalized_count_table.txt", sep="\t", quote=FALSE, row.names=F)
+ write.table(data.frame("ID"=rownames(out), out), "DESeq_Table_Median_average_normalized_counts.txt", sep="\t", quote=FALSE, row.names=F)
  
 norm <- data.frame(norm_counts)
 median_avg <- data.frame("ID"=rownames(out), out)
@@ -183,7 +179,6 @@ Initially DESeq algorithm was applied on the whole dataset to create a normalize
 A second file named **DESeq_Table_Median_average_normalized_counts.txt** was also created to report the median and average normalized count levels for each analysed attribute in each sample class.
 
 ## Differential expression analysis
-
 ```{r detest, echo=FALSE, message=FALSE, warning=FALSE} 
 #### The analysis is cycled on each pair of the reference covariate levels
 listout <- list()
@@ -206,16 +201,20 @@ for(i in 1:ncol(comparisons)){
   res_sub <- results(dds.sub, contrast=c(refcov, cov1, cov2), cooksCutoff=FALSE)
   
   # Writing of the output file
-  write.table(data.frame("ID"= rownames(res_sub), res_sub), file= paste0(outf, "DESeq_Table_DE_results_", cov1, "_vs_", cov2, ".txt"), sep="\t", quote=FALSE, row.names=F)
+  write.table(data.frame("ID"= rownames(res_sub), res_sub), file= paste0("DESeq_Table_DE_results_", cov1, "_vs_", cov2, ".txt"), sep="\t", quote=FALSE, row.names=F)
   
   id <- paste0(cov1, "_vs_", cov2)
   listout[[i]] <- res_sub
   names(listout)[i] <- id}
 ```
 
-The analysis was performed on **`r  length(listout)`** comparison(s). 
+The analysis was performed on **`r  length(listout)`** comparison(s).
 
-For each comparison a file names **DESeq_Table_DE_results_(class1)_vs_(class2).txt** was generated in which cov1 and cov2 correspond to the sample classes compared. This file reports the result of the differential expression analysis for each analysed feature.
+For each comparison a file names **DESeq_Table_DE_results_(class1)_vs_(class2).txt** was generated in which class1 and class2 correspond to the sample classes compared. This file reports the result of the differential expression analysis for each analysed feature.
+
+For each comparison a file named **DESeq_Table_DE_results_(class1)_vs_(class2)_significant.txt** was generated in which class1 and class2 correspond to the sample classes compared. This file reports the significant results of the differential expression analysis associated with absolute log2FC greater than **`r params$logfcthreshold`** and adjusted p-value lower than **`r params$pvalthreshold`**. For each comparison, a Volcano Plot showing the relationship between the log2FC and adjusted p-value computed for each analysed attribute is provided.
+
+The file named **DESeq_Table_Merged_DESeq2_results.txt** was provided reporting the median and average level and the results from the differential expression analysis.
 
 ```{r compade, echo=FALSE, message=FALSE, warning=FALSE, results='asis'} 
 for(i in 1:length(listout)){
@@ -227,39 +226,39 @@ ID <- row.names(de)
 de <- cbind(ID, de)
 de <- arrange(de, padj)
 
-write.table(de, file= paste0(outf, "DESeq_Table_DE_results_", covid[1], "_vs_", covid[2], "_significant.txt"), sep="\t", quote=FALSE, row.names=F)
+write.table(de, file= paste0("DESeq_Table_DE_results_", covid[1], "_vs_", covid[2], "_significant.txt"), sep="\t", quote=FALSE, row.names=F)
 
 cat("The differential expression analysis between **", covid[1], "** and **", covid[2], "** detected **", nrow(de), "** significanlty differentially expressed feature(s).\n\n", sep = "")
 
-p <- EnhancedVolcano(listout[[1]], lab=row.names(listout[[1]]), x = 'log2FoldChange', y = 'padj', pCutoff = 0.001, FCcutoff = 1, ylab = "-log10(Adjusted p-value)", legend=c('NS','log2(FC)','Adj. p-value', 'Adj. p-value & log2(FC)'))
+p <- EnhancedVolcano(listout[[1]], 
+                     lab=row.names(listout[[1]]), 
+                     x = 'log2FoldChange', 
+                     y = 'padj', 
+                     pCutoff = params$pvalthreshold, 
+                     FCcutoff = params$logfcthreshold, 
+                     ylab = "-log10(Adjusted p-value)",
+                     legend=c('NS','log2FC','Adj. p-value', 
+                              'Adj. p-value & log2FC'),
+                     legendPosition="right",
+                     axisLabSize = 10)
 
-pdf(paste0(outf, "DESeq_Plot_Volcano_plot_", covid[1], "_vs_", covid[2], ".pdf"))
+print(p)
+
+pdf(paste0("DESeq_Plot_Volcano_plot_", covid[1], "_vs_", covid[2], ".pdf"))
 print(p)
 dev.off()
 
 if(nrow(de)>0){
 
 covid <- as.character(de$ID[1])
-totest <- data.frame(Class=phenoData[,refcov], value=t(norm[covid,]), check.names=F)
+totest <- data.frame(Class=phenoData[,refcov], value=t(norm[as.character(covid),]), check.names=F)
 totest[,1] <- factor(totest[,1], levels = covord)
 totest[,2] <- log10(totest[,2]+1)
 
-# Boxplot for the significant differentially expressed attributes  
- for(j in 1:nrow(de)){
-  
-  covid <- as.character(de$ID[j])
-  totest <- data.frame(Class=phenoData[,refcov], value=t(norm[covid,]), check.names=F)
-  totest[,1] <- factor(totest[,1], levels = covord)
-  totest[,2] <- log10(totest[,2]+1)
-  boxp(totest, covid, refcov, inlinep=FALSE)}
-
 cat("The most significant differential expression feature was **", as.character(de[1,1]), "**. \n\n", sep="")
 # Inline plot of the most significant differentially expressed attribute
-boxp(totest, covid, refcov, inlinep=TRUE)
-}}
+boxp(totest, covid, refcov, inlinep=TRUE)}}
 ```
-
-For each comparison a file named **DESeq_Table_DE_results_(class1)_vs_(class2)_significant.txt** was generated in which class1 and class2 correspond to the sample classes compared. This file reports the significant results of the differential expression analysis associated with absolute log2FC greater than **`r params$logfcthreshold`** and adjusted p-value lower than **`r params$pvalthreshold`**. For each comparison, a Volcano Plot showing the relationship between the log2FC and adjusted p-value computed for each analysed attribute is provided.
 
 ```{r merge, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
 ### Merge of the results from the DESeq2 analysis
@@ -288,10 +287,8 @@ names(pad) <- paste0(ids, "_adjusted p-value")
 complete <- cbind(median_avg, logfc, pval, pad)
 row.names(complete) <- row.names(dat)
 
-write.table(complete, paste0(outf, "DESeq_Table_Merged_DESeq2_results.txt"), quote=F, col.names=NA, sep="\t")
+write.table(complete, paste0("DESeq_Table_Merged_DESeq2_results.txt"), quote=F, col.names=NA, sep="\t")
 ```
-
-The file named **DESeq_Table_Merged_DESeq2_results.txt** was provided reporting the median and average level and the results from the differential expression analysis.
 
 ## Comparison between lists of differentially expressed attributes
 ```{r compar, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
@@ -312,7 +309,7 @@ cat("The following UpSet plot reports the  number of attributes overlapped compa
 p <- upset(fromList(res2), empty.intersections = "on", number.angles = 0)
 print(p)
 
-pdf(paste0(outf, "DESeq_Plot_Upset_DE_result_overlap.pdf"))
+pdf(paste0("DESeq_Plot_Upset_DE_result_overlap.pdf"))
 print(p)
 dev.off()  
 
@@ -320,10 +317,6 @@ combos <- Reduce(c,lapply(2:length(res2), function(x) combn(1:length(res2), x, s
 resoverlap <- lapply(combos, function(x) Reduce(intersect,res2[x]))
 
 out <- "The following data report the list of attributes overlapped among different comparisons.\n\n"
-
-out
-
-out <- ""
 
 for(i in 1:length(resoverlap)){
 names(resoverlap)[i] <- paste(names(res2)[combos[[i]]], collapse=", ")
@@ -334,7 +327,7 @@ out <- paste0(out, paste(resoverlap[[i]], collapse=","), "\n\n")
 
 cat("The file named **DESeq_Table_Overlapped_Results.txt** reporting these results was generated. \n\n")
 
-write.table(out, paste0(outf, "DESeq_Table_Overlapped_Results.txt"), quote=F, row.names=F, col.names=F)
+write.table(out, "DESeq_Table_Overlapped_Results.txt", quote=F, row.names=F, col.names=F)
 
 }else{cat("Only one comparison between sample classes was performed.\n\n")}
 ```

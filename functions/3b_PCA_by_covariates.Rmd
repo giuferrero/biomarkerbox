@@ -31,8 +31,8 @@ library("factoextra")
 
 ```{r reading, echo=FALSE, message=FALSE, warning=FALSE, results="asis"}
 # Output folder creation
-outf = paste0(params$outfolder, "02_Attribute_Analysis/")
-dir.create(outf)
+setwd(params$outfolder)
+dir.create("02_Sample_Data_Analysis")
 
 # Table containing the covariates
 phenoData <- read.delim(params$pdata, row.names=1, check.names = F)
@@ -80,7 +80,7 @@ imp <- summary(cdata.pca)$importance
 
 cat("The first principal component explain **", paste0(imp[2,1]*100, "%"),"** of the variance in the data while the second principal component explain **", paste0(imp[2,2]*100, "%"),"** of the variance.\n\n", sep="")
 
-write.table(imp, paste0(outf, "PCA_Table_PC_count_data_importance.txt"), sep="\t", quote=F, col.names=NA)
+write.table(imp, "PCA_Table_PC_count_data_importance.txt", sep="\t", quote=F, col.names=NA)
 
 cat("The file named **PCA_Table_PC_Count_Data_Importance.txt** was provided. This file report the proportion of variance explained by each principal component.", sep="")
 
@@ -90,7 +90,7 @@ cat("The following Scree plot report the contribution of the first components. T
 p <- fviz_eig(cdata.pca, ggthem = theme_bw(), main=NULL)
 print(p)
 
-pdf(file=paste0(outf,"PCA_Plot_Count_data_screeplot.pdf"))
+pdf("PCA_Plot_Count_data_screeplot.pdf")
 print(p)
 dev.off()
 
@@ -116,7 +116,7 @@ for(i in 1:ncol(phenoData)){
   dat <- data.frame(cbind(cov, cdatat), check.names=T)
   names(dat)[1] <- covid
     
-	pdf(paste0(outf,"PCA_Plot_PCA_count_data_colored_by_", covid2, ".pdf"), 7, 7)
+	pdf(paste0("PCA_Plot_PCA_count_data_colored_by_", covid2, ".pdf"), 7, 7)
 	outplot <- autoplot(cdata.pca, data = dat, colour=covid, size=3.5, na.value = "gray") + theme_bw() + theme(legend.position="top") + labs(colour=covid2)
 	print(outplot)
 	dev.off()}
