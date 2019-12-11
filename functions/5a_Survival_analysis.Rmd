@@ -96,4 +96,4 @@ glance(fit.coxph)
 ## Output files
 The following output files were generated:
 
-All the output file were generated in the folder **05_Statistical_Analysis**
+All the output files were generated in the folder **05_Statistical_Analysis**

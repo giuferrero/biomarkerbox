@@ -87,7 +87,7 @@ refcov <- params$refcov
 covtomodel <- params$covtomodel
 ```
 
-In this document are reported the result of the DESeq2 differential expression analysis applied on the attributes of the **`r basename(params$cdata)`** file. The analysis is performed considering the **`r length(cov_class)`** classes of the  **`r refcov`** attribute. 
+In this document are reported the result of the DESeq2 differential expression analysis applied on the attributes of the **`r basename(params$cdata)`** file. The analysis was performed considering the **`r length(cov_class)`** classes of the  **`r refcov`** attribute. 
 
 ```{r setclass, echo=FALSE, message=FALSE, warning=FALSE} 
 # Defining the class of the sample attribute
@@ -104,6 +104,7 @@ In this document are reported the result of the DESeq2 differential expression a
 phenoData <- phenoData[!is.na(phenoData[, refcov]),]
 countData <- countData[, row.names(phenoData)]
 countData <- round(countData,0)
+n0 = sum(rowSums(countData) > 0)
 countData <- countData[rowSums(countData) > 0, ]
 ```
 
@@ -120,14 +121,14 @@ if(sum(covtomodel %in% names(phenoData)) == length(covtomodel)){
 
 # Check order of classes
 if(sum(covord %in% phenoData[,refcov]) == length(covord)){
-  cat(paste0("The ", paste0(covtomodel, collapse = ", "), " attribute(s) is/are included in the sample classes.\n\n"), sep="")}else{
+  cat(paste0("The ", paste0(covord, collapse = ", "), " attribute(s) is/are included in the sample classes.\n\n"), sep="")}else{
   stop(paste0("One or more indicated classe is not included in the sample classes.\n\n"))}
 ```
 
-Attributes with zero counts in each sample were filtered out. A total of **`r nrow(countData)`** attributes were analyzed.
-
 ## Count normalization
 Differential expression analysis was performed using DESeq2 version **`r packageVersion("DESeq2")`** using the likelihood ratio (LRT) test. In the LRT model the attribute(s) considered for the analysis was/were: **`r params$covtomodel`**.
+
+**`n0`** attribute(s) with zero counts in each sample were filtered out. A total of **`r nrow(countData)`** attributes were analyzed.
 
 ```{r model, echo=FALSE, message=FALSE, warning=FALSE} 
 # Definition of the models
@@ -210,9 +211,11 @@ for(i in 1:ncol(comparisons)){
 
 The analysis was performed on **`r  length(listout)`** comparison(s).
 
-For each comparison a file names **DESeq_Table_DE_results_(class1)_vs_(class2).txt** was generated in which class1 and class2 correspond to the sample classes compared. This file reports the result of the differential expression analysis for each analysed feature.
+For each comparison a file names **DESeq_Table_DE_results_(class1)\_vs\_(class2).txt** was generated in which class1 and class2 correspond to the sample classes compared. This file reports the result of the differential expression analysis for each analysed feature.
 
-For each comparison a file named **DESeq_Table_DE_results_(class1)_vs_(class2)_significant.txt** was generated in which class1 and class2 correspond to the sample classes compared. This file reports the significant results of the differential expression analysis associated with absolute log2FC greater than **`r params$logfcthreshold`** and adjusted p-value lower than **`r params$pvalthreshold`**. For each comparison, a Volcano Plot showing the relationship between the log2FC and adjusted p-value computed for each analysed attribute is provided.
+For each comparison a file named **DESeq_Table_DE_results_(class1)\_vs\_(class2)_significant.txt** was generated in which class1 and class2 correspond to the sample classes compared. This file reports the significant results of the differential expression analysis associated with absolute log2FC greater than **`r params$logfcthreshold`** and adjusted p-value lower than **`r params$pvalthreshold`**. 
+
+For each comparison, a Volcano Plot is provided using the Enhanced Volcano package version `r packageVersion("EnhancedVolcano")` showing the relationship between the log2FC and adjusted p-value computed for each analysed attribute is provided.
 
 The file named **DESeq_Table_Merged_DESeq2_results.txt** was provided reporting the median and average level and the results from the differential expression analysis.
 
@@ -228,7 +231,7 @@ de <- arrange(de, padj)
 
 write.table(de, file= paste0("DESeq_Table_DE_results_", covid[1], "_vs_", covid[2], "_significant.txt"), sep="\t", quote=FALSE, row.names=F)
 
-cat("The differential expression analysis between **", covid[1], "** and **", covid[2], "** detected **", nrow(de), "** significanlty differentially expressed feature(s).\n\n", sep = "")
+cat("\n\nThe differential expression analysis between **", covid[1], "** and **", covid[2], "** detected **", nrow(de), "** significanlty differentially expressed feature(s).\n\n", sep = "")
 
 p <- EnhancedVolcano(listout[[1]], 
                      lab=row.names(listout[[1]]), 
@@ -316,16 +319,13 @@ dev.off()
 combos <- Reduce(c,lapply(2:length(res2), function(x) combn(1:length(res2), x, simplify=FALSE)))
 resoverlap <- lapply(combos, function(x) Reduce(intersect,res2[x]))
 
-out <- "The following data report the list of attributes overlapped among different comparisons.\n\n"
-
 for(i in 1:length(resoverlap)){
 names(resoverlap)[i] <- paste(names(res2)[combos[[i]]], collapse=", ")
-cat(out, ": ", names(resoverlap)[i], "\n", paste0(resoverlap[[i]], collapse=", "), "\n\n")
 out <- paste0(out, names(resoverlap)[i], "\n")
 out <- paste0(out, paste(resoverlap[[i]], collapse=","), "\n\n")
 }
 
-cat("The file named **DESeq_Table_Overlapped_Results.txt** reporting these results was generated. \n\n")
+cat("\n\nThe file named **DESeq_Table_Overlapped_Results.txt** reporting the name of the attributes overlapped is provided. \n\n")
 
 write.table(out, "DESeq_Table_Overlapped_Results.txt", quote=F, row.names=F, col.names=F)
 
@@ -337,12 +337,17 @@ The following output files were generated:
 
 * DESeq_Table_Normalized_count_table.txt
 * DESeq_Table_Median_average_normalized_counts.txt
-* DESeq_Table_DE_results_(class1)_vs_(class2).txt (class1, class2 = sample classes compared)
-* DESeq_Table_DE_results_(class1)_vs_(class2)_significant.txt (class1, class2 = sample classes compared)
+* DESeq_Table_DE_results_(class1)\_vs\_(class2).txt (class1, class2 = sample classes compared)
+* DESeq_Table_DE_results_(class1)\_vs\_(class2)_significant.txt (class1, class2 = sample classes compared)
 * DESeq_Table_Merged_DESeq2_results.txt
 * DESeq_Table_Overlapped_Results.txt
-* DESeq_Plot_Volcano_plot_(class1)_vs_(class2).pdf (class1, class2 = sample classes compared)
+* DESeq_Plot_Volcano_plot_(class1)\_vs\_(class2).pdf (class1, class2 = sample classes compared)
 * DESeq_Plot_analysis_boxplot_(attribute).pdf (attribute = specific attribute plotted)
 * DESeq_Plot_Upset_DE_result_overlap.pdf
 
-All the output file were generated in the folder **03_Count_Data_Analysis**
+All the output files were generated in the folder **03_Count_Data_Analysis**
+
+## References
+* 1. Love, M. I., Huber, W., & Anders, S. (2014). Moderated estimation of fold change and dispersion for RNA-seq data with DESeq2. Genome biology, 15(12), 550.
+* 2. Kevin B. (2019). EnhancedVolcano: Publication-ready volcano
+plots with enhanced colouring and labeling. R package version 1.0.1. https://github.com/kevinblighe/EnhancedVolcano

@@ -167,4 +167,4 @@ The following output files were generated:
 * Preprocessing_Table_Outlier_analysis.txt
 * Preprocessing_Plot_Outlier_analysis_histogram_(attribute).pdf (attribute = identifier of the attribute considered)
 
-All the output file were generated in the folder **01_QC_and_Data_Preprocessing**
+All the output files were generated in the folder **01_QC_and_Data_Preprocessing**

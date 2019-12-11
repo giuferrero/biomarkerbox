@@ -187,4 +187,4 @@ The following output files were generated:
 * Correlation_Plot_Corrplot_Pearson_correlation.pdf
 * Correlation_Plot_Corrplot_Spearman_correlation.pdf
 
-All the output file were generated in the folder **02_Attribute_Analysis**
+All the output files were generated in the folder **02_Attribute_Analysis**

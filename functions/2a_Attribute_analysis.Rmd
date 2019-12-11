@@ -318,4 +318,4 @@ The following output files were generated:
 * Attribute_analysis_Plot_Grouped_barplot_(attribute_id).pdf (attribute_id = attribute plotted)
 * Attribute_analysis_Plot_Boxplot_(attribute_id).pdf (attribute_id = attribute plotted)
 
-All the output file were generated in the folder **02_Sample_Data_Analysis**
+All the output files were generated in the folder **02_Sample_Data_Analysis**

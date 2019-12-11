@@ -129,4 +129,4 @@ The following output files were generated:
 * PCA_Plot_Count_data_screeplot.pdf
 * PCA_Plot_PCA_count_Data_colored_by_(attribute id).pdf (attribute id = attribute used for the analysis)
 
-All the output file were generated in the folder **02_Attribute_Analysis**
+All the output files were generated in the folder **02_Attribute_Analysis**
