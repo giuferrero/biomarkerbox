@@ -7,21 +7,7 @@
 #    http://shiny.rstudio.com/
 #
 
-library(shiny)
-library(shinydashboard)
-
-tryObserve <- function(x) {
-  x <- substitute(x)
-  env <- parent.frame()
-  observe({
-    tryCatch(
-      eval(x, env),
-      error = function(e) {
-        showNotification(paste("Error: ", e$message), type = "error")
-      }
-    )
-  })
-}
+source("../utils.R")
 
 ui <- dashboardPage(
   ## Header content
@@ -40,6 +26,10 @@ ui <- dashboardPage(
 
   ## Sidebar content
   dashboardSidebar(
+    tags$head(
+      tags$link(rel = "stylesheet", type = "text/css", href = "custom.css"),
+      tags$script(src = "custom.js")
+    ),
     sidebarMenu(
       menuItem("Input", tabName = "input", icon = icon("table")),
       menuItem("QC", tabName = "qc", icon = icon("tasks")),
@@ -62,11 +52,13 @@ ui <- dashboardPage(
                   box(h3("Input data"),
                   h5("In this section you can insert the two main files required for the analysis."), status = "info", width = 12),
                   
-                  box(fileInput("sdata", "Sample data")),
+                  box(fileInput("sdata", "Sample data"), width = 12),
                 
+                  box(DT::dataTableOutput("sdatat"), width = 12),
+                  
                   box(fileInput("cdata", "Count data")),
                   
-                  box(tableOutput("sdatat")),
+                  box(DT::dataTableOutput("cdatat"), width = 12),
                   
                   box(plotOutput("plot1")),
                   
@@ -117,9 +109,18 @@ ui <- dashboardPage(
 server <- function(input, output) {
 
   #### Input operations
-  output$sdatat <- renderDataTable({sdata <- input$sdata
-                                     if (is.null(sdata)){return(NULL)}
-                                     read.delim(sdata$datapath)})
+  output$sdatat <- DT::renderDataTable({
+  
+    sdata <- input$sdata
+    if (is.null(sdata)){return(NULL)}
+    read.delim(sdata$datapath)})
+  
+  output$cdatat <- DT::renderDataTable({
+    
+    cdata <- input$cdata
+    if (is.null(cdata)){return(NULL)}
+    read.delim(cdata$datapath)})
+  
   #### QC operations
   
   output$plot1 <- renderPlot({
@@ -132,4 +133,4 @@ server <- function(input, output) {
   
 }
 
-shinyApp(ui, server)
+shinyApp(ui, server, options = list(height = 1080))
