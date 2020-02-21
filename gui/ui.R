@@ -70,37 +70,38 @@ ui <- dashboardPage(
         
         # QC tab
         tabItem(tabName = "qc",
-                h1("Datasets quality control and preprocessing")
+                box(h3("Datasets quality control and preprocessing"), width = 12),
+                box(h5("In this section, the quality control and preprocessing analyses of the sample and the count table can be run."), status = "info", width = 12)
         ),
       
         # Attribute analysis tab
         tabItem(tabName = "attr",
-                h1("Datasets quality control and preprocessing")
+                box(h3("Analysis of the sample attributes"), width = 12),
+                box(h5("In this section, the analyses of the sample attributes can be run."), status = "info", width = 12)
         ),
 
         # Correlation analysis tab
         tabItem(tabName = "corr",
-                h1("Datasets quality control and preprocessing")
+                box(h3("Analysis of the correlation between sample attributes"), width = 12),
+                box(h5("In this section, the correlation analyses among the sample attributes can be run."), status = "info", width = 12)
         ),
 
         # Differential analysis tab
         tabItem(tabName = "diff",
-                h1("Datasets quality control and preprocessing")
+                box(h3("Differential analysis of the analysed features"), width = 12),
+                box(h5("In this section, the differential analysis of the attributes reported in the count table can be run."), status = "info", width = 12)
         ),
         
         # Prediction analysis tab
         tabItem(tabName = "pred",
-                h1("Datasets quality control and preprocessing")
-        ),
-        
-        # Feature selection analysis tab
-        tabItem(tabName = "fs",
-                h1("Datasets quality control and preprocessing")
+                box(h3("Machine learning analysis of the data"), width = 12),
+                box(h5("In this section, the integrated machine learning analysis of the sample attributes can be run."), status = "info", width = 12)
         ),
         
         # Survival analysis tab
         tabItem(tabName = "surv",
-                h1("Datasets quality control and preprocessing")
+                box(h3("Survival analysis"), width = 12),
+                box(h5("In this section, the survival analysis can be run."), status = "info", width = 12)
         )
         
       )))
