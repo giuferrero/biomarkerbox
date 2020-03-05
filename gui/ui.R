@@ -8,6 +8,7 @@
 #
 
 source("../utils.R")
+library(markdown)
 
 ui <- dashboardPage(
   ## Header content
@@ -56,7 +57,7 @@ ui <- dashboardPage(
                 
                   box(DT::dataTableOutput("sdatat"), width = 12),
                   
-                  box(fileInput("cdata", "Count data")),
+                  box(fileInput("cdata", "Count data"), width = 12),
                   
                   box(DT::dataTableOutput("cdatat"), width = 12),
                   
@@ -71,13 +72,14 @@ ui <- dashboardPage(
         # QC tab
         tabItem(tabName = "qc",
                 box(h3("Datasets quality control and preprocessing"), width = 12),
-                box(h5("In this section, the quality control and preprocessing analyses of the sample and the count table can be run."), status = "info", width = 12)
+                box(includeMarkdown("./text/1_QC.md"), status = "info", width = 12),
+                box(actionButton("start_QC", "Run the analysis"))
         ),
       
         # Attribute analysis tab
         tabItem(tabName = "attr",
                 box(h3("Analysis of the sample attributes"), width = 12),
-                box(h5("In this section, the analyses of the sample attributes can be run."), status = "info", width = 12)
+                box(p("In this section, the analyses of the sample attributes can be run."), status = "info", width = 12)
         ),
 
         # Correlation analysis tab
@@ -123,6 +125,11 @@ server <- function(input, output) {
     read.delim(cdata$datapath)})
   
   #### QC operations
+  
+  randomVals <- eventReactive(input$go, {
+    runif(input$sdata)
+    runif(input$cdata)
+  })
   
   output$plot1 <- renderPlot({
     histdata <- rnorm(500)
