@@ -9,9 +9,11 @@
 
 source("../utils.R")
 library(markdown)
+library(shinyFiles)
 
 ui <- dashboardPage(
-  ## Header content
+
+    ## Header content
   dashboardHeader(title = "BiomarkeRbox",
                   dropdownMenu(type = "notifications",
                                notificationItem(
@@ -39,13 +41,15 @@ ui <- dashboardPage(
       menuItem("Differential analysis", tabName = "diff", icon = icon("th")),
       menuItem("Prediction analysis", tabName = "pred", icon = icon("th")),
       menuItem("Feature selection analysis", tabName = "fs", icon = icon("th")),
-      menuItem("Survival analysis", tabName = "surv", icon = icon("th")),
-      menuItem("prova analysis", tabName = "surv", icon = icon("th")) 
+      menuItem("Survival analysis", tabName = "surv", icon = icon("th"))
     )
   ),
 
 ## Body content
   dashboardBody(
+    tags$style(type="text/css",
+               ".shiny-output-error { visibility: hidden; }",
+               ".shiny-output-error:before { visibility: hidden; }"),
       tabItems(
         # Input data ta
         tabItem(tabName = "input",
@@ -53,15 +57,13 @@ ui <- dashboardPage(
                   box(h3("Input data"),
                   h5("In this section you can insert the two main files required for the analysis."), status = "info", width = 12),
                   
-                  box(fileInput("sdata", "Sample data"), width = 12),
+                  box(shinyFilesButton("sdata", "Sample data", "Please select a sample data file", multiple = F), width = 12),
                 
                   box(DT::dataTableOutput("sdatat"), width = 12),
                   
-                  box(fileInput("cdata", "Count data"), width = 12),
+                  box(shinyFilesButton("cdata", "Count data", "Please select a count data file", multiple = F), width = 12),
                   
                   box(DT::dataTableOutput("cdatat"), width = 12),
-                  
-                  box(plotOutput("plot1")),
                   
                   box(
                     title = "Controls",
@@ -108,37 +110,7 @@ ui <- dashboardPage(
         
       )))
 
-###### Server
-server <- function(input, output) {
-
-  #### Input operations
-  output$sdatat <- DT::renderDataTable({
-  
-    sdata <- input$sdata
-    if (is.null(sdata)){return(NULL)}
-    read.delim(sdata$datapath)})
-  
-  output$cdatat <- DT::renderDataTable({
-    
-    cdata <- input$cdata
-    if (is.null(cdata)){return(NULL)}
-    read.delim(cdata$datapath)})
-  
-  #### QC operations
-  
-  randomVals <- eventReactive(input$go, {
-    runif(input$sdata)
-    runif(input$cdata)
-  })
-  
-  output$plot1 <- renderPlot({
-    histdata <- rnorm(500)
-    data <- histdata[seq_len(input$slider)]
-    hist(data)
-  })
-  
-  #### ML operations
-  
-}
+source("server.R")
 
 shinyApp(ui, server, options = list(height = 1080))
+

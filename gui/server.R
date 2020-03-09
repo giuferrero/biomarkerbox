@@ -1,26 +1,58 @@
-#
-# This is the server logic of a Shiny web application. You can run the 
-# application by clicking 'Run App' above.
-#
-# Find out more about building applications with Shiny here:
-# 
-#    http://shiny.rstudio.com/
-#
-
 library(shiny)
+library(shinyFiles)
+library(fs)
 
-# Define server logic required to draw a histogram
-shinyServer(function(input, output) {
-   
-  output$distPlot <- renderPlot({
+###### Server
+server <- function(input, output, session) {
+  
+  volumes <- c(Home = fs::path_home())
+  
+  shinyFileChoose(input, "sdata", roots = volumes, session = session)
+  
+  sdat <- reactive({
+    req(input$sdata)
+    if (is.null(input$sdata))
+      return(NULL)    
+    return(parseFilePaths(volumes, input$sdata)$datapath)
+    })
+  
+  shinyFileChoose(input, "cdata", roots = volumes, session = session)
+  
+  cdat <- reactive({
+    req(input$cdata)
+    if (is.null(input$cdata))
+      return(NULL)    
+    return(parseFilePaths(volumes, input$cdata)$datapath)
+  })
+  
+  #### Input operations
+  output$sdatat <- DT::renderDataTable({
+    if(is.null(sdat())){return(NULL)}
+    DT::datatable(read.delim(sdat()), filter = 'top', options = list(scrollX=T, autoWidth = TRUE))})
+  
+  output$cdatat <- DT::renderDataTable({
     
-    # generate bins based on input$bins from ui.R
-    x    <- faithful[, 2] 
-    bins <- seq(min(x), max(x), length.out = input$bins + 1)
+    cdata <- input$cdata
+    if(is.null(cdat())){return(NULL)}
+    DT::datatable(read.delim(cdat()), filter = 'top', options = list(scrollX=T, autoWidth = TRUE))})
+  
+  #### QC operations
+  
+  observeEvent(input$start_QC, {
     
-    # draw the histogram with the specified number of bins
-    hist(x, breaks = bins, col = 'darkgray', border = 'white')
+    vals <- reactiveValues()
+    vals$QC_out <- system(paste("Rscript RunBiomarkerBox.R QC ~/Desktop/", sdat(), cdat(), "~/Desktop/Sample_Data_cov_class.txt", "Diet"))
+    
+    showModal(modalDialog("The analysis is completed"))
     
   })
   
-})
+  output$plot1 <- renderPlot({
+    histdata <- rnorm(500)
+    data <- histdata[seq_len(input$slider)]
+    hist(data)
+  })
+  
+  #### ML operations
+  
+}
