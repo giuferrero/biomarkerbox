@@ -15,6 +15,15 @@ server <- function(input, output, session) {
       return(NULL)    
     return(parseFilePaths(volumes, input$sdata)$datapath)
     })
+
+  shinyFileChoose(input, "sdata_class", roots = volumes, session = session)
+  
+  sdat_class <- reactive({
+    req(input$sdata_class)
+    if (is.null(input$sdata_class))
+      return(NULL)
+    return(parseFilePaths(volumes, input$sdata_class)$datapath)
+  })
   
   shinyFileChoose(input, "cdata", roots = volumes, session = session)
   
@@ -25,34 +34,37 @@ server <- function(input, output, session) {
     return(parseFilePaths(volumes, input$cdata)$datapath)
   })
   
-  #### Input operations
+###### Input operations
+  
   output$sdatat <- DT::renderDataTable({
-    if(is.null(sdat())){return(NULL)}
-    DT::datatable(read.delim(sdat()), filter = 'top', options = list(scrollX=T, autoWidth = TRUE))})
+    if(is.null(sdat())){
+    return(NULL)}
+    DT::datatable(read.delim(sdat(), check.names = F), filter = 'top', options = list(scrollX=T, autoWidth = TRUE))
+    contents_sdata <- read.delim(sdat(), check.names = F)
+    updateSelectInput(session, "ref", choices = names(contents_sdata))
+    })
   
   output$cdatat <- DT::renderDataTable({
-    
-    cdata <- input$cdata
     if(is.null(cdat())){return(NULL)}
-    DT::datatable(read.delim(cdat()), filter = 'top', options = list(scrollX=T, autoWidth = TRUE))})
+    DT::datatable(read.delim(cdat(), check.names = F), filter = 'top', options = list(scrollX=T, autoWidth = TRUE))})
   
-  #### QC operations
+###### QC operations
   
   observeEvent(input$start_QC, {
     
-    vals <- reactiveValues()
-    vals$QC_out <- system(paste("Rscript RunBiomarkerBox.R QC ~/Desktop/", sdat(), cdat(), "~/Desktop/Sample_Data_cov_class.txt", "Diet"))
+    valsQC <- reactiveValues()
+    valsQC$QC_out <- system(paste("Rscript RunBiomarkerBox.R QC ~/Desktop/", sdat(), cdat(), sdat_class(), input$ref))
     
     showModal(modalDialog("The analysis is completed"))
     
   })
+
+###### Attribute analysis operations
+
+###### Correlation analysis operations 
+
+###### Differential analysis operations   
   
-  output$plot1 <- renderPlot({
-    histdata <- rnorm(500)
-    data <- histdata[seq_len(input$slider)]
-    hist(data)
-  })
-  
-  #### ML operations
+###### Machine Learning analysis operations
   
 }

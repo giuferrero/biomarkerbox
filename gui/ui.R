@@ -8,12 +8,11 @@
 #
 
 source("../utils.R")
-library(markdown)
-library(shinyFiles)
+library("markdown")
+library("shinyFiles")
 
 ui <- dashboardPage(
-
-    ## Header content
+  ## Header content
   dashboardHeader(title = "BiomarkeRbox",
                   dropdownMenu(type = "notifications",
                                notificationItem(
@@ -61,15 +60,15 @@ ui <- dashboardPage(
                 
                   box(DT::dataTableOutput("sdatat"), width = 12),
                   
+                  box(shinyFilesButton("sdata_class", "Sample data type", "Please select a file reporting the types of the sample data variables", multiple = F), width = 12),
+                  
+                  box(selectInput("ref", "Please select the reference covariate", choices = "Pending Upload"), width = 12),
+                  
                   box(shinyFilesButton("cdata", "Count data", "Please select a count data file", multiple = F), width = 12),
                   
-                  box(DT::dataTableOutput("cdatat"), width = 12),
+                  box(DT::dataTableOutput("cdatat"), width = 12)
                   
-                  box(
-                    title = "Controls",
-                    sliderInput("slider", "Number of observations:", 1, 100, 50)
-                    ))
-        ),
+        )),
         
         # QC tab
         tabItem(tabName = "qc",
