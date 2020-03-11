@@ -14,7 +14,6 @@ params:
   pdata: ""
   covclass: ""
   refcov: ""
-  covord: ""
   covtomodel: ""
   logfcthreshold: ""
   pvalthreshold: ""
@@ -77,11 +76,6 @@ comparisons <- combn(cov_class, m=2)
 totest_p <- list()
 for(i in 1:ncol(comparisons)){totest_p[[i]] <- comparisons[,i] }
 
-#Set the order of sample classes in the plots
-covord <- params$covord
-if(length(covord) == 1){covord = cov_class}
-phenoData[,refcov] <- factor(phenoData[,refcov], levels = covord)
-
 #Set attribute for analysis
 refcov <- params$refcov
 covtomodel <- params$covtomodel
@@ -118,11 +112,6 @@ if(refcov %in% names(phenoData)){
 if(sum(covtomodel %in% names(phenoData)) == length(covtomodel)){
   cat(paste0("The ", paste0(covtomodel, collapse = ", "), " attribute(s) is/are included in the sample attributes.\n\n"), sep="")}else{
   stop(paste0("One or more attributes selected in the model is not included in the sample attributes.\n\n"))}
-
-# Check order of classes
-if(sum(covord %in% phenoData[,refcov]) == length(covord)){
-  cat(paste0("The ", paste0(covord, collapse = ", "), " attribute(s) is/are included in the sample classes.\n\n"), sep="")}else{
-  stop(paste0("One or more indicated classe is not included in the sample classes.\n\n"))}
 ```
 
 ## Count normalization
@@ -255,7 +244,7 @@ if(nrow(de)>0){
 
 covid <- as.character(de$ID[1])
 totest <- data.frame(Class=phenoData[,refcov], value=t(norm[as.character(covid),]), check.names=F)
-totest[,1] <- factor(totest[,1], levels = covord)
+totest[,1] <- factor(totest[,1], levels = totest[,1])
 totest[,2] <- log10(totest[,2]+1)
 
 cat("The most significant differential expression feature was **", as.character(de[1,1]), "**. \n\n", sep="")

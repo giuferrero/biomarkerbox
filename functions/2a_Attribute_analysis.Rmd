@@ -14,7 +14,6 @@ params:
   pdata: ""
   covclass: ""
   refcov: ""
-  covord: ""
 ---
 In this document are reported the result of the analysis of the samples attributes reported in the **`r basename(params$pdata)`** file.
 
@@ -33,7 +32,7 @@ setwd(params$outfolder)
 dir.create("02_Sample_Data_Analysis")
 
 # Table containing the sample attributes
-phenoData <- read.delim(params$pdata, row.names=1, check.names = F)
+phenoData <- read.delim(params$pdata, check.names = F)
 
 # List reporting the class of each sample attribute
 covariates <- read.delim(params$covclass)
@@ -46,11 +45,6 @@ cov_class <- levels(phenoData[,refcov])
 comparisons <- combn(cov_class, m=2)
 totest_p <- list()
 for(i in 1:ncol(comparisons)){totest_p[[i]] <- comparisons[,i] }
-
-#Set the order of sample classes in the plots
-covord <- params$covord
-if(length(covord) == 1){covord = cov_class}
-phenoData[,refcov] <- factor(phenoData[,refcov], levels = covord)
 ```
 
 ```{r setclass, echo=FALSE, message=FALSE, warning=FALSE, results='asis'} 
@@ -69,12 +63,6 @@ if(refcov %in% names(phenoData)){
   cat(paste0("The ", refcov, " attribute is included in the sample attributes.\n\n"), sep="")}else{
   cat(paste0("The ", refcov, " attribute is not included in the sample attributes.\n\n"))
   stop("The indicated reference attribute was not found")}
-
-# Check order of attributes
-if(sum(covord %in% phenoData[,refcov]) == length(covord)){
-  cat(paste0("All the indicated sample classes are included.\n\n"), sep="")}else{
-  cat(paste0("The  ", paste0(setdiff(covord, phenoData[,refcov]), collapse = ", "), " is/are not included in the sample attributes.\n\n"))
-  stop("One or more classes is/are not included in the samples classes")}
 ```
 
 ## Analysis among all the sample classes
@@ -187,7 +175,7 @@ checkandplot <- function(dat, n=1, inline=FALSE){
   for(j in 1:n){
   covid <- as.character(dat$Attribute[j])
   totest <- phenoData[,c(refcov, covid)]
-  totest[,refcov] <- factor(totest[,refcov], levels = covord)
+  totest[,refcov] <- factor(totest[,refcov], levels = totest[,refcov])
   
   # Bar plot of categorical attributes
   if(class(totest[,2]) == "factor"){

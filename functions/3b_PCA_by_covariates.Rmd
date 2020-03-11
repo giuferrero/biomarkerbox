@@ -14,7 +14,6 @@ params:
   cdata: ""
   covclass: ""
   refcov: ""
-  covord: ""
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 ---
 
@@ -45,12 +44,6 @@ covariates <- read.delim(params$covclass)
 
 # Identification of the levels of the reference covariate
 cov_class <- levels(phenoData[,params$refcov])
-
-#Set the order of sample classes in the plots
-covord <- params$covord
-refcov <- params$refcov
-if(length(covord) == 1){covord = cov_class}
-phenoData[,refcov] <- factor(phenoData[,refcov], levels = covord)
 ```
 
 ```{r setclass, echo=FALSE, message=FALSE, warning=FALSE, results="asis"} 

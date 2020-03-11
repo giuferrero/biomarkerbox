@@ -39,9 +39,8 @@ server <- function(input, output, session) {
   output$sdatat <- DT::renderDataTable({
     if(is.null(sdat())){
     return(NULL)}
-    DT::datatable(read.delim(sdat(), check.names = F), filter = 'top', options = list(scrollX=T, autoWidth = TRUE))
-    contents_sdata <- read.delim(sdat(), check.names = F)
-    updateSelectInput(session, "ref", choices = names(contents_sdata))
+    updateSelectInput(session, "ref", choices = names(read.delim(sdat(), check.names = F)))
+    return(DT::datatable(read.delim(sdat(), check.names = F), filter = 'top', options = list(scrollX=T, autoWidth = TRUE)))
     })
   
   output$cdatat <- DT::renderDataTable({
@@ -59,12 +58,63 @@ server <- function(input, output, session) {
     
   })
 
+###### Pre-processing analysis operations
+
+  observeEvent(input$start_Pre, {
+    
+    valsPre <- reactiveValues()
+    valsPre$Pre_out <- system(paste("Rscript RunBiomarkerBox.R Attribute ~/Desktop/", sdat(), sdat_class(), input$ref, c("Healthy", "Inf", "Adenoma", "CRC")))
+    
+    showModal(modalDialog("The analysis is completed"))
+    
+  })  
+  
 ###### Attribute analysis operations
+
+  observeEvent(input$start_Attr, {
+    
+    valsAttr <- reactiveValues()
+    valsAttr$Attr_out <- system(paste("Rscript RunBiomarkerBox.R Attribute ~/Desktop/", sdat(), sdat_class(), input$ref, c("Healthy", "Inf", "Adenoma", "CRC")))
+    
+    showModal(modalDialog("The analysis is completed"))
+    
+  })  
+
+###### PCA analysis operations   
+
+  observeEvent(input$start_PCA, {
+    
+    valsPCA <- reactiveValues()
+    valsPCA$PCA_out <- system(paste("Rscript RunBiomarkerBox.R PCA ~/Desktop/", sdat(), sdat_class(), input$ref, c("Healthy", "Inf", "Adenoma", "CRC")))
+    
+    showModal(modalDialog("The analysis is completed"))
+    
+  })    
 
 ###### Correlation analysis operations 
 
+  observeEvent(input$start_Corr, {
+    
+    valsCorr <- reactiveValues()
+    valsCorr$Corr_out <- system(paste("Rscript RunBiomarkerBox.R Correlation ~/Desktop/", sdat(), sdat_class(), input$ref))
+    
+    showModal(modalDialog("The analysis is completed"))
+    
+  })    
+  
 ###### Differential analysis operations   
   
+  observeEvent(input$start_Diff, {
+    
+    valsDiff <- reactiveValues()
+    valsDiff$Diff_out <- system(paste("Rscript RunBiomarkerBox.R Correlation ~/Desktop/", sdat(), sdat_class(), input$ref))
+    
+    showModal(modalDialog("The analysis is completed"))
+    
+  })  
+  
 ###### Machine Learning analysis operations
+
+###### Survival analysis operations  
   
 }

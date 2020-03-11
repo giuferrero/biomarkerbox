@@ -35,7 +35,7 @@ if(modality == "QC"){
 }else if(modality == "Attribute"){
   
   # Execution of the attribute analysis
-  rmarkdown::render(paste0(sf,"2a_Attribute_analysis.Rmd"),params = list(outfolder=of, pdata = args[3], covclass = args[4], refcov = args[5], covord = args[6]), output_format="all")
+  rmarkdown::render(paste0(sf,"2a_Attribute_analysis.Rmd"),params = list(outfolder=of, pdata = args[3], covclass = args[4], refcov = args[5]), output_format="all")
  moveout("2a_Attribute_analysis")
   
 }else if(modality == "Correlation"){
@@ -47,13 +47,13 @@ if(modality == "QC"){
 }else if(modality == "DESeq2"){
   
   # Execution of the DESeq2 analysis
-  rmarkdown::render(paste0(sf,"3a_DESeq2.Rmd"), params = list(outfolder=of, pdata = args[2], cdata = args[3], covclass= args[4], refcov = args[5], covord=args[5], covtomodel=args[7], logfcthreshold=args[8], pvalthreshold=args[9]), output_format="all")
+  rmarkdown::render(paste0(sf,"3a_DESeq2.Rmd"), params = list(outfolder=of, pdata = args[2], cdata = args[3], covclass= args[4], refcov = args[5], covtomodel=args[6], logfcthreshold=args[7], pvalthreshold=args[8]), output_format="all")
   moveout("3a_DESeq2")
   
 }else if(modality == "PCA"){
   
   # Execution of the PCA analysis
-  rmarkdown::render(paste0(sf,"3b_PCA_by_covariates.Rmd"), params = list(outfolder=of, pdata = args[3], cdata=args[4], covclass = args[5], refcov = args[6], covord = args[7]), output_format="all")
+  rmarkdown::render(paste0(sf,"3b_PCA_by_covariates.Rmd"), params = list(outfolder=of, pdata = args[3], cdata=args[4], covclass = args[5], refcov = args[6]), output_format="all")
   moveout("3b_PCA_by_covariates")
   
 }
@@ -67,10 +67,10 @@ rmarkdown::render(paste0(sf,"1a_Data_QC.Rmd"), params = list(outfolder=sf, pdata
 
 rmarkdown::render(paste0(sf,"1b_Preprocessing.Rmd"), params = list(outfolder=sf, pdata = pdata, cdata = cdata, covclass = covclass, refcov = refcov), output_format="all")
 
-rmarkdown::render(paste0(sf,"2a_Attribute_analysis.Rmd"), params = list(outfolder=sf, pdata = pdata, covclass = covclass, refcov = refcov, covord = covord), output_format="all")
+rmarkdown::render(paste0(sf,"2a_Attribute_analysis.Rmd"), params = list(outfolder=sf, pdata = pdata, covclass = covclass, refcov = refcov), output_format="all")
 
 rmarkdown::render(paste0(sf,"2b_Correlation_plot.Rmd"), params = list(outfolder=of, pdata = pdata, covclass = covclass, rthreshold=0.5, pvalthreshold=0.00001), output_format="all")
 
-rmarkdown::render(paste0(sf,"3a_DESeq2.Rmd"), params = list(outfolder=sf, pdata = pdata, cdata = cdata, covclass=covclass, refcov = refcov, covord=covord, covtomodel=covtomodel, logfcthreshold=1, pvalthreshold=0.05), output_format="all")
+rmarkdown::render(paste0(sf,"3a_DESeq2.Rmd"), params = list(outfolder=sf, pdata = pdata, cdata = cdata, covclass=covclass, refcov = refcov, covtomodel=covtomodel, logfcthreshold=1, pvalthreshold=0.05), output_format="all")
 
-rmarkdown::render(paste0(sf,"3b_PCA_by_covariates.Rmd"), params = list(outfolder=sf, pdata = pdata, cdata = cdata, covclass = covclass, refcov = refcov, covord = covord), output_format="all")
+rmarkdown::render(paste0(sf,"3b_PCA_by_covariates.Rmd"), params = list(outfolder=sf, pdata = pdata, cdata = cdata, covclass = covclass, refcov = refcov), output_format="all")
