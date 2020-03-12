@@ -47,6 +47,8 @@ server <- function(input, output, session) {
     if(is.null(cdat())){return(NULL)}
     DT::datatable(read.delim(cdat(), check.names = F), filter = 'top', options = list(scrollX=T, autoWidth = TRUE))})
   
+  ref <- reactive(input$ref)
+  
 ###### QC operations
   
   observeEvent(input$start_QC, {
@@ -63,18 +65,18 @@ server <- function(input, output, session) {
   observeEvent(input$start_Pre, {
     
     valsPre <- reactiveValues()
-    valsPre$Pre_out <- system(paste("Rscript RunBiomarkerBox.R Attribute ~/Desktop/", sdat(), sdat_class(), input$ref, c("Healthy", "Inf", "Adenoma", "CRC")))
+    valsPre$Pre_out <- system(paste("Rscript RunBiomarkerBox.R Preprocessing ~/Desktop/", sdat(), sdat_class(), input$ref))
     
     showModal(modalDialog("The analysis is completed"))
     
-  })  
+  })
   
 ###### Attribute analysis operations
 
   observeEvent(input$start_Attr, {
     
     valsAttr <- reactiveValues()
-    valsAttr$Attr_out <- system(paste("Rscript RunBiomarkerBox.R Attribute ~/Desktop/", sdat(), sdat_class(), input$ref, c("Healthy", "Inf", "Adenoma", "CRC")))
+    valsAttr$Attr_out <- system(paste("Rscript RunBiomarkerBox.R Attribute ~/Desktop/", sdat(), sdat_class(), ref()))
     
     showModal(modalDialog("The analysis is completed"))
     
@@ -92,22 +94,22 @@ server <- function(input, output, session) {
   })    
 
 ###### Correlation analysis operations 
-
+  
   observeEvent(input$start_Corr, {
     
     valsCorr <- reactiveValues()
-    valsCorr$Corr_out <- system(paste("Rscript RunBiomarkerBox.R Correlation ~/Desktop/", sdat(), sdat_class(), input$ref))
+    valsCorr$Corr_out <- system(paste("Rscript RunBiomarkerBox.R Attribute ~/Desktop/", sdat(), sdat_class(), input$r, input$pval))
     
     showModal(modalDialog("The analysis is completed"))
     
-  })    
+  })  
   
 ###### Differential analysis operations   
   
   observeEvent(input$start_Diff, {
     
     valsDiff <- reactiveValues()
-    valsDiff$Diff_out <- system(paste("Rscript RunBiomarkerBox.R Correlation ~/Desktop/", sdat(), sdat_class(), input$ref))
+    valsDiff$Diff_out <- system(paste("Rscript RunBiomarkerBox.R Correlation ~/Desktop/", sdat(), sdat_class(), ref))
     
     showModal(modalDialog("The analysis is completed"))
     

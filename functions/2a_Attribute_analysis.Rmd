@@ -28,8 +28,9 @@ library("viridis")
 
 ```{r reading, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
 # Output folder creation
-setwd(params$outfolder)
-dir.create("02_Sample_Data_Analysis")
+
+dir.create(paste0(params$outfolder, "/02_Sample_Data_Analysis"))
+of <- paste0(params$outfolder, "/02_Sample_Data_Analysis/")
 
 # Table containing the sample attributes
 phenoData <- read.delim(params$pdata, check.names = F)
@@ -121,7 +122,7 @@ res <- res %>% filter(Attribute != refcov)
 res$p.value <- as.numeric(levels(res$p.value))[res$p.value]
 
 # Output writing
-write.table(res, "Attribute_analysis_Table_Differential_attribute_among_groups.tsv", sep="\t", quote=F, row.names=FALSE)
+write.table(res, paste0(of,"Attribute_analysis_Table_Differential_attribute_among_groups.tsv"), sep="\t", quote=F, row.names=FALSE)
 significant <- res %>% filter(p.value < 0.05)
 
 if(nrow(significant) > 0){ 
@@ -142,13 +143,13 @@ printout <- function(name, plot){
 stackedbar <- function(dat, covid, inlinep=FALSE){
   p <- ggplot(data=dat, aes(x=Var1, y=Freq, fill=Var2)) + geom_bar(stat="identity") + labs(y="Fraction of sample", x="Sample classes", fill=covid) + theme_bw() + scale_fill_viridis(discrete=T)
   if(inlinep==TRUE){print(p)}
-  printout(paste0("Attribute_analysis_Plot_Stacked_barplot_", covid, ".pdf"), p)}
+  printout(paste0(of, "Attribute_analysis_Plot_Stacked_barplot_", covid, ".pdf"), p)}
 
 # Definition of a function for the grouped bar plot
 groupedbar <- function(dat, covid, inlinep=FALSE){
     p <- ggplot(data=dat, aes(x=Var1, y=Freq, fill=Var2)) + geom_bar(stat="identity", position = position_dodge(0.9)) + labs(y=covid, x="Sample classes", fill=covid) + theme_bw() + scale_fill_viridis(discrete=T)
   if(inlinep==TRUE){print(p)}
-  printout(paste0("Attribute_analysis_Plot_Grouped_barplot_", covid, ".pdf"), p)}
+  printout(paste0(of, "Attribute_analysis_Plot_Grouped_barplot_", covid, ".pdf"), p)}
 
 # Definition of a function for the box plot
 boxp <- function(dat, covid, refcov, inlinep=FALSE){
@@ -167,7 +168,7 @@ boxp <- function(dat, covid, refcov, inlinep=FALSE){
   stat_compare_means(comparisons = totest_p, label = "p.signif", method = "wilcox.test", hide.ns=F)
   
   if(inlinep==TRUE){print(p)}
-  printout(paste0("Attribute_analysis_Plot_Boxplot_", covid, ".pdf"), p)}
+  printout(paste0(of, "Attribute_analysis_Plot_Boxplot_", covid, ".pdf"), p)}
 
 #Definition of a function for plotting a set of attributes
 checkandplot <- function(dat, n=1, inline=FALSE){
@@ -175,7 +176,6 @@ checkandplot <- function(dat, n=1, inline=FALSE){
   for(j in 1:n){
   covid <- as.character(dat$Attribute[j])
   totest <- phenoData[,c(refcov, covid)]
-  totest[,refcov] <- factor(totest[,refcov], levels = totest[,refcov])
   
   # Bar plot of categorical attributes
   if(class(totest[,2]) == "factor"){
@@ -280,7 +280,7 @@ for(i in 1:ncol(comparisons)){
   names(res) <- c("Attribute", cov1, cov2, "p.value")
 
   # Output writing
-  write.table(res, paste0("Attribute_analysis_Table_Different_attribues_", cov1, "_vs_", cov2, ".tsv"), sep="\t", quote=F, row.names=FALSE)
+  write.table(res, paste0(of,"Attribute_analysis_Table_Different_attribues_", cov1, "_vs_", cov2, ".tsv"), sep="\t", quote=F, row.names=FALSE)
 
 significant <- res %>% filter(p.value < 0.05)
   

@@ -35,7 +35,7 @@ ui <- dashboardPage(
     sidebarMenu(
       menuItem("Input", tabName = "input", icon = icon("table")),
       menuItem("QC", tabName = "qc", icon = icon("tasks")),
-      menuItem("Pre-processing analysis", tabName = "attr", icon = icon("th")),
+      menuItem("Pre-processing analysis", tabName = "pre", icon = icon("th")),
       menuItem("Attribute analysis", tabName = "attr", icon = icon("th")),
       menuItem("PCA analysis", tabName = "attr", icon = icon("th")),
       menuItem("Correlation analysis", tabName = "corr", icon = icon("th")),
@@ -72,7 +72,6 @@ ui <- dashboardPage(
                     shinyFilesButton("cdata", "Count data", "Please select a count data file", multiple = F), width = 12),
                   
                   box(DT::dataTableOutput("cdatat"), width = 12)
-                  
         )),
         
         # QC tab
@@ -99,21 +98,21 @@ ui <- dashboardPage(
         # Correlation analysis tab
         tabItem(tabName = "PCA",
                 box(h3("PCA analysis of the sample attributes"), width = 12),
-                box(h5("In this section, the PCA analysis of the sample attributes can be run."), status = "info", width = 12),
+                box(includeMarkdown("./text/7_PCA_analysis.md"), status = "info", width = 12),
                 box(actionButton("start_PCA", "Run the analysis"))
         ),
         
         # Correlation analysis tab
         tabItem(tabName = "corr",
                 box(h3("Analysis of the correlation between sample attributes"), width = 12),
-                box(h5("In this section, the correlation analyses among the sample attributes can be run."), status = "info", width = 12),
+                box(includeMarkdown("./text/4_Correlation_analysis.md"), status = "info", width = 12),
                 box(actionButton("start_Corr", "Run the analysis"))
         ),
 
         # Differential analysis tab
         tabItem(tabName = "diff",
                 box(h3("Differential analysis of the analysed features"), width = 12),
-                box(h5("In this section, the differential analysis of the attributes reported in the count table can be run."), status = "info", width = 12),
+                box(includeMarkdown("./text/5_Differential_analysis.md"), status = "info", width = 12),
                 box(actionButton("start_Diff", "Run the analysis"))
         ),
         

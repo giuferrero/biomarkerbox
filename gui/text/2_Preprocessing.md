@@ -16,6 +16,6 @@ The following output files will be generated:
 
 * Preprocessing_Table_Normal_distribution_analysis.txt
 * Preprocessing_Table_Outlier_analysis.txt
-* Preprocessing_Plot_Outlier_analysis_histogram_(attribute).pdf (attribute = identifier of the attribute considered)
+* Preprocessing_Plot_Outlier_analysis_histogram_\\(attribute\\).pdf \\(attribute is the identifier of the attribute considered\\)
 
 All the output files were generated in the folder **01_QC_and_Data_Preprocessing**
