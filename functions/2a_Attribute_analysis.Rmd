@@ -29,8 +29,8 @@ library("viridis")
 ```{r reading, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
 # Output folder creation
 
-dir.create(paste0(params$outfolder, "/02_Sample_Data_Analysis"))
-of <- paste0(params$outfolder, "/02_Sample_Data_Analysis/")
+dir.create(paste0(params$outfolder, "/02_Attribute_Analysis"))
+of <- paste0(params$outfolder, "/02_Attribute_Analysis/")
 
 # Table containing the sample attributes
 phenoData <- read.delim(params$pdata, row.names=1, check.names = F)
@@ -306,4 +306,4 @@ The following output files were generated:
 * Attribute_analysis_Plot_Grouped_barplot_(attribute_id).pdf (attribute_id = attribute plotted)
 * Attribute_analysis_Plot_Boxplot_(attribute_id).pdf (attribute_id = attribute plotted)
 
-All the output files were generated in the folder **02_Sample_Data_Analysis**
+All the output files were generated in the folder **02_Attribute_Analysis**

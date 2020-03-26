@@ -29,8 +29,8 @@ library("viridis")
 
 ```{r reading, echo=FALSE, message=FALSE, warning=FALSE, results="asis", comment=NA}
 # Output folder creation
-setwd(params$outfolder)
-dir.create("02_Sample_Data_Analysis")
+dir.create(paste0(params$outfolder, "/02_Attribute_Analysis"))
+outf <- paste0(params$outfolder, "/02_Attribute_Analysis/")
 
 # Table containing the sample attributes
 phenoData <- read.delim(params$pdata, row.names=1, check.names = F)
@@ -110,9 +110,9 @@ cat(paste(sig_p[,1], sig_p[,2], sep="\tAND\t"), sep="\n\n")
 cat("\n\nThe result of this analysis were provided with the files:\n\n **Correlation_Table_Attributes_Pearson_correlation_all.txt**\n\n **Correlation_Table_Attributes_Pearson_correlation_significant.txt**.\n\n", sep="")  
 }
 
-write.table(out_p, "Correlation_Table_Attributes_Pearson_correlation_all.txt", quote=F, row.names=F, sep="\t")
+write.table(out_p, paste0(outf, "Correlation_Table_Attributes_Pearson_correlation_all.txt"), quote=F, row.names=F, sep="\t")
 
-write.table(sig_p, "Correlation_Table_Attributes_Pearson_correlation_significant.txt", quote=F, row.names=F, sep="\t")
+write.table(sig_p,  paste0(outf,"Correlation_Table_Attributes_Pearson_correlation_significant.txt"), quote=F, row.names=F, sep="\t")
 
 cat("In the following are reported the scatter plot of the most significant correlation computed using the Pearson's method and as heat map all the correlation coefficients computed. The scatter plots of all the significant correlations are provided as pdf files with name **Correlation_Plot_Scatterplot_cov1_cov2.pdf** where cov1 and cov2 are the name of the correlated attributes. The heat map was provided as pdf file named **Correlation_Plot_Corrplot_Pearson_correlation.pdf**.\n\n", sep="")
 
@@ -126,7 +126,7 @@ scatterplot(phenoData_num, as.character(sig_p[i,1]), as.character(sig_p[i,2]), r
 corrplot(res_p$r, order="hclust", hclust.method = "ward.D2", type="upper", col = viridis::viridis(100), tl.srt=45, tl.col="black", tl.cex = 0.5)
 dev.off()
 
-pdf("Correlation_Plot_Corrplot_Pearson_correlation.pdf")
+pdf( paste0(outf,"Correlation_Plot_Corrplot_Pearson_correlation.pdf"))
 corrplot(res_p$r, order="hclust", hclust.method = "ward.D2", type="upper", col = viridis::viridis(100), tl.srt=45, tl.col="black", tl.cex = 0.5)
 dev.off()
 ```
@@ -156,9 +156,9 @@ cat("\n\nThe result of this analysis were provided with the files:\n\n **Correla
 } 
 
 # Write of the output file
-write.table(out_s, "Correlation_Table_Attributes_Spearman_correlation_all.txt", quote=F, row.names=F, sep="\t")
+write.table(out_s,  paste0(outf,"Correlation_Table_Attributes_Spearman_correlation_all.txt"), quote=F, row.names=F, sep="\t")
 
-write.table(sig_s, "Correlation_Table_Attributes_Spearman_correlation_significant.txt", quote=F, row.names=F, sep="\t")
+write.table(sig_s,  paste0(outf,"Correlation_Table_Attributes_Spearman_correlation_significant.txt"), quote=F, row.names=F, sep="\t")
 
 cat("In the following are reported the scatter plot of the most significant correlation computed using the Spearman's method and as heat map all the correlation coefficients computed. The scatter plots of all the significant correlations are provided as pdf files with name **Correlation_Plot_Scatterplot_cov1_cov2.pdf** where cov1 and cov2 are the name of the correlated attributes. The heat map was provided as pdf file named **Correlation_Plot_Corrplot_Spearman_correlation.pdf**.\n\n", sep="")
 
@@ -172,7 +172,7 @@ scatterplot(phenoData_num, as.character(sig_s[i,1]), as.character(sig_s[i,2]), r
 corrplot(res_s$r, order="hclust", hclust.method = "ward.D2", type="upper", col = viridis::viridis(100), tl.srt=45, tl.col="black", tl.cex = 0.5)
 dev.off()
 
-pdf("Correlation_Plot_Corrplot_Spearman_correlation.pdf")
+pdf(paste0(outf,"Correlation_Plot_Corrplot_Spearman_correlation.pdf"))
 corrplot(res_s$r, order="hclust", hclust.method = "ward.D2", type="upper", col = viridis::viridis(100), tl.srt=45, tl.col="black", tl.cex = 0.5)
 dev.off()
 ```
