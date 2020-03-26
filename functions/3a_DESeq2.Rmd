@@ -57,7 +57,8 @@ boxp <- function(dat, covid, refcov, inlinep=FALSE){
 ```{r reading, echo=FALSE, message=FALSE, warning=FALSE}
 # Output folder creation
 setwd(params$outfolder)
-dir.create("03_Count_Data_Analysis")
+dir.create(paste0(params$outfolder, "/03_Count_Data_Analysis"))
+outf <- paste0(params$outfolder, "/03_Count_Data_Analysis/")
 
 # Table containing the count data
 countData <- read.delim(params$cdata, row.names=1)
@@ -157,8 +158,8 @@ dds_complete <- DESeqDataSetFromMatrix(countData = countData, colData = phenoDat
  row.names(out) <- rownames(norm_counts)
  
 # Write the normalized count table and the table reporting the average and the median read counts
- write.table(data.frame("ID"=rownames(norm_counts), norm_counts), "DESeq_Table_Normalized_count_table.txt", sep="\t", quote=FALSE, row.names=F)
- write.table(data.frame("ID"=rownames(out), out), "DESeq_Table_Median_average_normalized_counts.txt", sep="\t", quote=FALSE, row.names=F)
+ write.table(data.frame("ID"=rownames(norm_counts), norm_counts), paste0(outf, "DESeq_Table_Normalized_count_table.txt"), sep="\t", quote=FALSE, row.names=F)
+ write.table(data.frame("ID"=rownames(out), out), paste0(outf, "DESeq_Table_Median_average_normalized_counts.txt"), sep="\t", quote=FALSE, row.names=F)
  
 norm <- data.frame(norm_counts)
 median_avg <- data.frame("ID"=rownames(out), out)
@@ -191,7 +192,7 @@ for(i in 1:ncol(comparisons)){
   res_sub <- results(dds.sub, contrast=c(refcov, cov1, cov2), cooksCutoff=FALSE)
   
   # Writing of the output file
-  write.table(data.frame("ID"= rownames(res_sub), res_sub), file= paste0("DESeq_Table_DE_results_", cov1, "_vs_", cov2, ".txt"), sep="\t", quote=FALSE, row.names=F)
+  write.table(data.frame("ID"= rownames(res_sub), res_sub), file= paste0(outf, "DESeq_Table_DE_results_", cov1, "_vs_", cov2, ".txt"), sep="\t", quote=FALSE, row.names=F)
   
   id <- paste0(cov1, "_vs_", cov2)
   listout[[i]] <- res_sub
@@ -218,7 +219,7 @@ ID <- row.names(de)
 de <- cbind(ID, de)
 de <- arrange(de, padj)
 
-write.table(de, file= paste0("DESeq_Table_DE_results_", covid[1], "_vs_", covid[2], "_significant.txt"), sep="\t", quote=FALSE, row.names=F)
+write.table(de, file= paste0(outf, "DESeq_Table_DE_results_", covid[1], "_vs_", covid[2], "_significant.txt"), sep="\t", quote=FALSE, row.names=F)
 
 cat("\n\nThe differential expression analysis between **", covid[1], "** and **", covid[2], "** detected **", nrow(de), "** significanlty differentially expressed feature(s).\n\n", sep = "")
 
@@ -236,7 +237,7 @@ p <- EnhancedVolcano(listout[[1]],
 
 print(p)
 
-pdf(paste0("DESeq_Plot_Volcano_plot_", covid[1], "_vs_", covid[2], ".pdf"))
+pdf(paste0(outf, "DESeq_Plot_Volcano_plot_", covid[1], "_vs_", covid[2], ".pdf"))
 print(p)
 dev.off()
 
@@ -279,7 +280,7 @@ names(pad) <- paste0(ids, "_adjusted p-value")
 complete <- cbind(median_avg, logfc, pval, pad)
 row.names(complete) <- row.names(dat)
 
-write.table(complete, paste0("DESeq_Table_Merged_DESeq2_results.txt"), quote=F, col.names=NA, sep="\t")
+write.table(complete, paste0(outf, "DESeq_Table_Merged_DESeq2_results.txt"), quote=F, col.names=NA, sep="\t")
 ```
 
 ## Comparison between lists of differentially expressed attributes
@@ -301,7 +302,7 @@ cat("The following UpSet plot reports the  number of attributes overlapped compa
 p <- upset(fromList(res2), empty.intersections = "on", number.angles = 0)
 print(p)
 
-pdf(paste0("DESeq_Plot_Upset_DE_result_overlap.pdf"))
+pdf(paste0(outf, "DESeq_Plot_Upset_DE_result_overlap.pdf"))
 print(p)
 dev.off()  
 
@@ -316,7 +317,7 @@ out <- paste0(out, paste(resoverlap[[i]], collapse=","), "\n\n")
 
 cat("\n\nThe file named **DESeq_Table_Overlapped_Results.txt** reporting the name of the attributes overlapped is provided. \n\n")
 
-write.table(out, "DESeq_Table_Overlapped_Results.txt", quote=F, row.names=F, col.names=F)
+write.table(out, paste0(outf,"DESeq_Table_Overlapped_Results.txt"), quote=F, row.names=F, col.names=F)
 
 }else{cat("Only one comparison between sample classes was performed.\n\n")}
 ```

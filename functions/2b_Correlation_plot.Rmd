@@ -85,7 +85,7 @@ scatterplot <- function(dat, id1, id2, refcov, inlinep=FALSE){
   
   if(inlinep==TRUE){print(p)}
   
-  printout(paste0("Correlation_Plot_Scatterplot_", id1,"_", id2,".pdf"), p)}
+  printout(paste0(outf, "Correlation_Plot_Scatterplot_", id1,"_", id2,".pdf"), p)}
 ```
 
 ```{r pearson, echo=FALSE, message=FALSE, warning=FALSE, results="asis", comment=NA}
