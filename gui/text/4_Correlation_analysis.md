@@ -1,8 +1,8 @@
-This section will perform a quality control analysis on the input data verifying:
+This section will perform a correlation analysis between the sample covariates providing:
 
-* The consistency of the sample IDs
-* The presence of NA values
-* The presence of non numeric values in the count table
+* The results of a Pearson correlation analysis between sample covariates
+* The results of a Spearman correlation analysis between sample covariates
+* A graphical representation of the correlation results.
 
 The following report files will be generated:
 
@@ -20,5 +20,6 @@ The following output files will be generated:
 * Correlation_Table_Attributes_Spearman_correlation_significant.txt
 * Correlation_Plot_Corrplot_Pearson_correlation.pdf
 * Correlation_Plot_Corrplot_Spearman_correlation.pdf
+* Correlation_Plot_Scatterplot_cov1_cov2.pdf - cov1 and cov2 are the compared covariates
 
 All the output files will be generated in the folder **02_Attribute_Analysis**

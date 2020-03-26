@@ -21,7 +21,7 @@ In this document are reported the quality control analyses of the sample and the
 
 ```{r reading, echo=FALSE, message=FALSE, warning=FALSE}
 # Output folder creation
-outf = paste0(params$outfolder, "01_QC_and_Data_Preprocessing/")
+outf = paste0(params$outfolder, "/01_QC_and_Data_Preprocessing/")
 dir.create(outf)
 
 # Table containing the covariates

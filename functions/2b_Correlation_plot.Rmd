@@ -186,5 +186,6 @@ The following output files were generated:
 * Correlation_Table_Attributes_Spearman_correlation_significant.txt
 * Correlation_Plot_Corrplot_Pearson_correlation.pdf
 * Correlation_Plot_Corrplot_Spearman_correlation.pdf
+* Correlation_Plot_Scatterplot_(cov1)_(cov2).pdf (cov1 and cov2 are the compared covariates)
 
 All the output files were generated in the folder **02_Attribute_Analysis**

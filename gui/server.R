@@ -34,27 +34,39 @@ server <- function(input, output, session) {
     return(parseFilePaths(volumes, input$cdata)$datapath)
   })
   
+  ref <- reactive(input$ref)
+  
+  shinyDirChoose(
+    input, 'outf', roots = volumes, session = session
+  )
+  
+  outf <- reactive({
+    req(input$outf)
+    if (is.null(input$outf))
+      return(NULL)    
+    return(parseDirPath(volumes, input$outf))
+  })
+  
 ###### Input operations
   
   output$sdatat <- DT::renderDataTable({
     if(is.null(sdat())){
     return(NULL)}
-    updateSelectInput(session, "ref", choices = names(read.delim(sdat(), check.names = F)))
-    return(DT::datatable(read.delim(sdat(), check.names = F), filter = 'top', options = list(scrollX=T, autoWidth = TRUE)))
+    updateSelectInput(session, "ref", choices = names(read.delim(sdat(), check.names = F, row.names=1)))
+    updateSelectInput(session, "ref2", choices = names(read.delim(sdat(), check.names = F, row.names=1)))
+    return(DT::datatable(read.delim(sdat(), check.names = F, row.names=1), filter = 'top', options = list(scrollX=T, autoWidth = TRUE, pageLength = 5)))
     })
   
   output$cdatat <- DT::renderDataTable({
     if(is.null(cdat())){return(NULL)}
-    DT::datatable(read.delim(cdat(), check.names = F), filter = 'top', options = list(scrollX=T, autoWidth = TRUE))})
-  
-  ref <- reactive(input$ref)
+    DT::datatable(read.delim(cdat(), check.names = F, row.names=1), filter = 'top', options = list(scrollX=T, autoWidth = TRUE, pageLength = 5))})
   
 ###### QC operations
   
   observeEvent(input$start_QC, {
     
     valsQC <- reactiveValues()
-    valsQC$QC_out <- system(paste("Rscript RunBiomarkerBox.R QC ~/Desktop/", sdat(), cdat(), sdat_class(), input$ref))
+    valsQC$QC_out <- system(paste("Rscript RunBiomarkerBox.R QC", outf(), sdat(), cdat(), sdat_class(), input$ref))
     
     showModal(modalDialog("The analysis is completed"))
     
@@ -65,7 +77,7 @@ server <- function(input, output, session) {
   observeEvent(input$start_Pre, {
     
     valsPre <- reactiveValues()
-    valsPre$Pre_out <- system(paste("Rscript RunBiomarkerBox.R Preprocessing ~/Desktop/", sdat(), sdat_class(), input$ref))
+    valsPre$Pre_out <- system(paste("Rscript RunBiomarkerBox.R Preprocessing", outf(), sdat(), cdat(), sdat_class(), input$ref))
     
     showModal(modalDialog("The analysis is completed"))
     
@@ -76,7 +88,7 @@ server <- function(input, output, session) {
   observeEvent(input$start_Attr, {
     
     valsAttr <- reactiveValues()
-    valsAttr$Attr_out <- system(paste("Rscript RunBiomarkerBox.R Attribute ~/Desktop/", sdat(), sdat_class(), ref()))
+    valsAttr$Attr_out <- system(paste("Rscript RunBiomarkerBox.R Attribute", outf(), sdat(), sdat_class(), ref()))
     
     showModal(modalDialog("The analysis is completed"))
     
@@ -87,7 +99,7 @@ server <- function(input, output, session) {
   observeEvent(input$start_PCA, {
     
     valsPCA <- reactiveValues()
-    valsPCA$PCA_out <- system(paste("Rscript RunBiomarkerBox.R PCA ~/Desktop/", sdat(), sdat_class(), input$ref, c("Healthy", "Inf", "Adenoma", "CRC")))
+    valsPCA$PCA_out <- system(paste("Rscript RunBiomarkerBox.R PCA", outf(), sdat(), sdat_class(), input$ref))
     
     showModal(modalDialog("The analysis is completed"))
     
@@ -98,7 +110,7 @@ server <- function(input, output, session) {
   observeEvent(input$start_Corr, {
     
     valsCorr <- reactiveValues()
-    valsCorr$Corr_out <- system(paste("Rscript RunBiomarkerBox.R Attribute ~/Desktop/", sdat(), sdat_class(), input$r, input$pval))
+    valsCorr$Corr_out <- system(paste("Rscript RunBiomarkerBox.R Attribute", outf(), sdat(), sdat_class(), input$rcor, input$pcor))
     
     showModal(modalDialog("The analysis is completed"))
     
@@ -109,11 +121,11 @@ server <- function(input, output, session) {
   observeEvent(input$start_Diff, {
     
     valsDiff <- reactiveValues()
-    valsDiff$Diff_out <- system(paste("Rscript RunBiomarkerBox.R Correlation ~/Desktop/", sdat(), sdat_class(), ref))
+    valsDiff$Diff_out <- system(paste("Rscript RunBiomarkerBox.R DESeq2", outf(), sdat(), sdat_class(), input$ref, input$ldiff, input$pdiff, input$ref2))
     
     showModal(modalDialog("The analysis is completed"))
     
-  })  
+  })
   
 ###### Machine Learning analysis operations
 

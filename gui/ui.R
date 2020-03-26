@@ -13,18 +13,7 @@ library("shinyFiles")
 
 ui <- dashboardPage(
   ## Header content
-  dashboardHeader(title = "BiomarkeRbox",
-                  dropdownMenu(type = "notifications",
-                               notificationItem(
-                                 text = "5 new users today",
-                                 icon("users")
-                               )
-                  ),
-                  dropdownMenu(type = "tasks", badgeStatus = "success",
-                               taskItem(value = 90, color = "green",
-                                        "Documentation"
-                               )
-                  )),
+  dashboardHeader(title = "BiomarkeRbox"),
 
   ## Sidebar content
   dashboardSidebar(
@@ -37,7 +26,7 @@ ui <- dashboardPage(
       menuItem("QC", tabName = "qc", icon = icon("tasks")),
       menuItem("Pre-processing analysis", tabName = "pre", icon = icon("th")),
       menuItem("Attribute analysis", tabName = "attr", icon = icon("th")),
-      menuItem("PCA analysis", tabName = "attr", icon = icon("th")),
+      menuItem("PCA analysis", tabName = "PCA", icon = icon("th")),
       menuItem("Correlation analysis", tabName = "corr", icon = icon("th")),
       menuItem("Differential analysis", tabName = "diff", icon = icon("th")),
       menuItem("Prediction analysis", tabName = "pred", icon = icon("th")),
@@ -71,12 +60,16 @@ ui <- dashboardPage(
                   box(p(strong("Please select the file reporting the count data file")),
                     shinyFilesButton("cdata", "Count data", "Please select a count data file", multiple = F), width = 12),
                   
-                  box(DT::dataTableOutput("cdatat"), width = 12)
+                  box(DT::dataTableOutput("cdatat"), width = 12),
+                  
+                  box(p(strong("Please select the output folder")),
+                    shinyDirButton("outf", "Output folder", "Please select the output folder"), width = 12)
+                  
         )),
         
         # QC tab
         tabItem(tabName = "qc",
-                box(h3("Datasets quality control and preprocessing"), width = 12),
+                box(h3("Datasets quality control"), width = 12),
                 box(includeMarkdown("./text/1_QC.md"), status = "info", width = 12),
                 box(actionButton("start_QC", "Run the analysis"))
         ),
@@ -106,14 +99,20 @@ ui <- dashboardPage(
         tabItem(tabName = "corr",
                 box(h3("Analysis of the correlation between sample attributes"), width = 12),
                 box(includeMarkdown("./text/4_Correlation_analysis.md"), status = "info", width = 12),
-                box(actionButton("start_Corr", "Run the analysis"))
+                box(numericInput("rcor", "Correlation threshold", value = 0.6), 
+                    numericInput("pcor", "Significance threshold", value = 0.05),
+                    actionButton("start_Corr", "Run the analysis"), width = 12)
         ),
 
         # Differential analysis tab
         tabItem(tabName = "diff",
                 box(h3("Differential analysis of the analysed features"), width = 12),
                 box(includeMarkdown("./text/5_Differential_analysis.md"), status = "info", width = 12),
-                box(actionButton("start_Diff", "Run the analysis"))
+                box(numericInput("ldiff", "log2FC threshold", value = 1), 
+                        numericInput("pdiff", "Significance threshold", value = 0.05),
+                        selectInput("ref2", "Please select the covariates to include in the model",
+                                    choices = "Pending Upload", multiple = T),
+                        actionButton("start_Diff", "Run the analysis"), width = 12)
         ),
         
         # Prediction analysis tab

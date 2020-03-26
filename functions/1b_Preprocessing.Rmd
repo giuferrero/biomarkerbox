@@ -21,7 +21,7 @@ In this document are reported the preprocessing analyses of the sample and the c
 
 ```{r reading, echo=FALSE, message=FALSE, warning=FALSE}
 # Output folder creation
-setwd(params$outfolder)
+outf = paste0(params$outfolder, "/01_QC_and_Data_Preprocessing/")
 dir.create("01_QC_and_Data_Preprocessing")
 
 # Table containing the covariates
@@ -90,7 +90,7 @@ if(sum(resnorm > 0.05) == 0){
 outhead <- "Preprocessing report: Normal distribution analysis\n"
 
 # Write of the output file
-write.table(paste0(outhead, outnorm), "Preprocessing_Table_Normal_distribution.txt", quote=F, row.names=F, col.names=F, sep="\t")
+write.table(paste0(outhead, outnorm), paste0(outf, "Preprocessing_Table_Normal_distribution.txt"), quote=F, row.names=F, col.names=F, sep="\t")
 ```
 `r outnorm`
 
@@ -133,7 +133,7 @@ if(length(outlier_attr)){
 }else{outoutlier <- paste0("None sample attributes present at least one outlier.")}
 
 # Write of the output file
-write.table(out, "Preprocessing_Table_Outlier_analysis.txt", quote=F, row.names=F, col.names=F, sep="\t")
+write.table(out, paste0(outf,"Preprocessing_Table_Outlier_analysis.txt"), quote=F, row.names=F, col.names=F, sep="\t")
 ```
 `r outoutlier`
 
@@ -146,7 +146,7 @@ for(i in 1:length(outlier_attr)){
   
   p <- ggplot(phenoData_num, aes(x = phenoData_num[,var])) + geom_density(colour="black", fill="white", alpha=0.8) + geom_rug(alpha=0.05) + theme_bw() + labs(x=var) + ggtitle(paste0("Distribution of the ", var, " attribute"))
   
-  pdf(paste0("Preprocessing_Plot_Outlier_analysis_histogram_", var, ".pdf"))
+  pdf(paste0(outf,"Preprocessing_Plot_Outlier_analysis_histogram_", var, ".pdf"))
   print(p)
   dev.off()
 }}

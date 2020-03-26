@@ -33,7 +33,7 @@ dir.create(paste0(params$outfolder, "/02_Sample_Data_Analysis"))
 of <- paste0(params$outfolder, "/02_Sample_Data_Analysis/")
 
 # Table containing the sample attributes
-phenoData <- read.delim(params$pdata, check.names = F)
+phenoData <- read.delim(params$pdata, row.names=1, check.names = F)
 
 # List reporting the class of each sample attribute
 covariates <- read.delim(params$covclass)
