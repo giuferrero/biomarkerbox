@@ -1,9 +1,14 @@
 library(shiny)
 library(shinyFiles)
 library(fs)
+library(ggplot2)
+library(ggthemes)
+library("plotly")
+library("shinyjs")
 
 ###### Server
 server <- function(input, output, session) {
+  
   
   volumes <- c(Home = fs::path_home())
   
@@ -47,6 +52,37 @@ server <- function(input, output, session) {
     return(parseDirPath(volumes, input$outf))
   })
   
+  ### Input check
+  observe({
+    req(input$sdata)
+    req(input$sdata_class)
+    req(input$ref)
+    req(input$outf)
+    updateActionButton(session, "start_Attr",
+                       label = "Run the analysis",
+                       icon = icon("play-circle"))
+    req(input$cdata)
+    updateActionButton(session, "start_QC",
+                       label = "Run the analysis",
+                       icon = icon("play-circle"))
+    
+    updateActionButton(session, "start_Pre",
+                       label = "Run the analysis",
+                       icon = icon("play-circle"))
+    
+    updateActionButton(session, "start_PCA",
+                       label = "Run the analysis",
+                       icon = icon("play-circle"))
+    
+    updateActionButton(session, "start_Corr",
+                       label = "Run the analysis",
+                       icon = icon("play-circle"))
+    
+    updateActionButton(session, "start_Diff",
+                       label = "Run the analysis",
+                       icon = icon("play-circle"))
+    })
+  
 ###### Input operations
   
   output$sdatat <- DT::renderDataTable({
@@ -65,6 +101,12 @@ server <- function(input, output, session) {
   
   observeEvent(input$start_QC, {
     
+    req(input$sdata)
+    req(input$sdata_class)
+    req(input$ref)
+    req(input$outf)
+    req(input$cdata)
+    
     valsQC <- reactiveValues()
     valsQC$QC_out <- system(paste("Rscript RunBiomarkerBox.R QC", outf(), sdat(), cdat(), sdat_class(), input$ref))
     
@@ -76,27 +118,45 @@ server <- function(input, output, session) {
 
   observeEvent(input$start_Pre, {
     
+    req(input$sdata)
+    req(input$sdata_class)
+    req(input$ref)
+    req(input$outf)
+    req(input$cdata)
+    
     valsPre <- reactiveValues()
     valsPre$Pre_out <- system(paste("Rscript RunBiomarkerBox.R Preprocessing", outf(), sdat(), cdat(), sdat_class(), input$ref))
-    
     showModal(modalDialog("The analysis is completed"))
     
   })
   
 ###### Attribute analysis operations
-
-  observeEvent(input$start_Attr, {
-    
+    observeEvent(input$start_Attr, {
+      
+      req(input$sdata)
+      req(input$sdata_class)
+      req(input$ref)
+      req(input$outf)
+      
     valsAttr <- reactiveValues()
-    valsAttr$Attr_out <- system(paste("Rscript RunBiomarkerBox.R Attribute", outf(), sdat(), sdat_class(), ref()))
-    
+    valsAttr$Attr_out <- system(paste("Rscript RunBiomarkerBox.R Attribute", outf(), sdat(), sdat_class(), input$ref))
     showModal(modalDialog("The analysis is completed"))
-    
-  })  
+    })
+  
+  output$test <- renderPlotly({
+    print(
+      ggplotly(
+        ggplot(data = mtcars, aes(x = disp, y = cyl)) + geom_smooth(method = lm, formula = y~x) + geom_point() + theme_bw()))})
 
 ###### PCA analysis operations   
 
   observeEvent(input$start_PCA, {
+    
+    req(input$sdata)
+    req(input$sdata_class)
+    req(input$ref)
+    req(input$outf)
+    req(input$cdata)
     
     valsPCA <- reactiveValues()
     valsPCA$PCA_out <- system(paste("Rscript RunBiomarkerBox.R PCA", outf(), sdat(), sdat_class(), input$ref))
@@ -109,8 +169,14 @@ server <- function(input, output, session) {
   
   observeEvent(input$start_Corr, {
     
+    req(input$sdata)
+    req(input$sdata_class)
+    req(input$ref)
+    req(input$outf)
+    req(input$cdata)
+    
     valsCorr <- reactiveValues()
-    valsCorr$Corr_out <- system(paste("Rscript RunBiomarkerBox.R Attribute", outf(), sdat(), sdat_class(), input$rcor, input$pcor))
+    valsCorr$Corr_out <- system(paste("Rscript RunBiomarkerBox.R Correlation", outf(), sdat(), sdat_class(), input$rcor, input$pcor))
     
     showModal(modalDialog("The analysis is completed"))
     
@@ -119,6 +185,12 @@ server <- function(input, output, session) {
 ###### Differential analysis operations   
   
   observeEvent(input$start_Diff, {
+    
+    req(input$sdata)
+    req(input$sdata_class)
+    req(input$ref)
+    req(input$outf)
+    req(input$cdata)
     
     valsDiff <- reactiveValues()
     valsDiff$Diff_out <- system(paste("Rscript RunBiomarkerBox.R DESeq2", outf(), sdat(), sdat_class(), input$ref, input$ldiff, input$pdiff, input$ref2))

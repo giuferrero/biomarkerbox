@@ -10,6 +10,9 @@
 source("../utils.R")
 library("markdown")
 library("shinyFiles")
+library("shinyjs")
+
+
 
 ui <- dashboardPage(
   ## Header content
@@ -41,20 +44,19 @@ ui <- dashboardPage(
                ".shiny-output-error { visibility: hidden; }",
                ".shiny-output-error:before { visibility: hidden; }"),
       tabItems(
-        # Input data ta
+        # Input data
         tabItem(tabName = "input",
                 fluidRow(
                   box(h3("Input data"),
                   h5("In this section you can insert the two main files required for the analysis."), status = "info", width = 12),
                   
                   box(p(strong("Please select a sample data file")),
-                    shinyFilesButton("sdata", label="Sample data", title="Please select a sample data file", multiple = F), width = 12),
+                    shinyFilesButton("sdata", label="Sample data", title="Please select a sample data file", multiple = F),width = 12),
                 
                   box(DT::dataTableOutput("sdatat"), width = 12),
                   
                   box(p(strong("Please select the file reporting the classes of the sample variables")),
                     shinyFilesButton("sdata_class", "Sample data type", "Please select a file reporting the types of the sample data variables", multiple = F), width = 12),
-                  
                   box(selectInput("ref", "Please select the reference covariate", choices = "Pending Upload"), width = 12),
                   
                   box(p(strong("Please select the file reporting the count data file")),
@@ -71,28 +73,29 @@ ui <- dashboardPage(
         tabItem(tabName = "qc",
                 box(h3("Datasets quality control"), width = 12),
                 box(includeMarkdown("./text/1_QC.md"), status = "info", width = 12),
-                box(actionButton("start_QC", "Run the analysis"))
+                box(actionButton("start_QC", "Waiting for input data", icon=icon("exclamation-circle")))
         ),
         
         # Pre-proccesing analysis tabe
         tabItem(tabName = "pre",
                 box(h3("Pre-processing analysis of the data"), width = 12),
                 box(includeMarkdown("./text/2_Preprocessing.md"), status = "info", width = 12),
-                box(actionButton("start_Pre", "Run the analysis"))
+                box(actionButton("start_Pre", "Waiting for input data", icon=icon("exclamation-circle")))
         ),        
       
         # Attribute analysis tab
         tabItem(tabName = "attr",
                 box(h3("Analysis of the sample attributes"), width = 12),
                 box(includeMarkdown("./text/3_Attribute_analysis.md"), status = "info", width = 12),
-                box(actionButton("start_Attr", "Run the analysis"))
+                box(actionButton("start_Attr", "Waiting for input data", icon=icon("exclamation-circle")), width = 12),
+                column(width = 6, plotlyOutput("test"))
         ),
 
         # Correlation analysis tab
         tabItem(tabName = "PCA",
                 box(h3("PCA analysis of the sample attributes"), width = 12),
                 box(includeMarkdown("./text/7_PCA_analysis.md"), status = "info", width = 12),
-                box(actionButton("start_PCA", "Run the analysis"))
+                box(actionButton("start_PCA", "Waiting for input data", icon=icon("exclamation-circle")))
         ),
         
         # Correlation analysis tab
@@ -101,7 +104,7 @@ ui <- dashboardPage(
                 box(includeMarkdown("./text/4_Correlation_analysis.md"), status = "info", width = 12),
                 box(numericInput("rcor", "Correlation threshold", value = 0.6), 
                     numericInput("pcor", "Significance threshold", value = 0.05),
-                    actionButton("start_Corr", "Run the analysis"), width = 12)
+                    actionButton("start_Corr", "Waiting for input data", icon=icon("exclamation-circle")), width = 12)
         ),
 
         # Differential analysis tab
@@ -112,7 +115,7 @@ ui <- dashboardPage(
                         numericInput("pdiff", "Significance threshold", value = 0.05),
                         selectInput("ref2", "Please select the covariates to include in the model",
                                     choices = "Pending Upload", multiple = T),
-                        actionButton("start_Diff", "Run the analysis"), width = 12)
+                        actionButton("start_Diff", "Waiting for input data", icon=icon("exclamation-circle")), width = 12)
         ),
         
         # Prediction analysis tab
@@ -126,7 +129,7 @@ ui <- dashboardPage(
                 box(h3("Survival analysis"), width = 12),
                 box(h5("In this section, the survival analysis can be run."), status = "info", width = 12)
         )
-        
+
       )))
 
 source("server.R")
