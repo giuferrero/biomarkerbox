@@ -51,21 +51,21 @@ ui <- dashboardPage(
                   h5("In this section you can insert the two main files required for the analysis."), status = "info", width = 12),
                   
                   box(p(strong("Please select a sample data file")),
-                    shinyFilesButton("sdata", label="Sample data", title="Please select a sample data file", multiple = F),width = 12),
+                    shinyFilesButton("sdata", label="Sample data", title="Please select a sample data file", multiple = F, icon=icon("exclamation-circle")),width = 12),
                 
                   box(DT::dataTableOutput("sdatat"), width = 12),
                   
                   box(p(strong("Please select the file reporting the classes of the sample variables")),
-                    shinyFilesButton("sdata_class", "Sample data type", "Please select a file reporting the types of the sample data variables", multiple = F), width = 12),
+                    shinyFilesButton("sdata_class", "Sample data type", "Please select a file reporting the types of the sample data variables", multiple = F, icon=icon("exclamation-circle")), width = 12),
                   box(selectInput("ref", "Please select the reference covariate", choices = "Pending Upload"), width = 12),
                   
                   box(p(strong("Please select the file reporting the count data file")),
-                    shinyFilesButton("cdata", "Count data", "Please select a count data file", multiple = F), width = 12),
+                    shinyFilesButton("cdata", "Count data", "Please select a count data file", multiple = F, icon=icon("exclamation-circle")), width = 12),
                   
                   box(DT::dataTableOutput("cdatat"), width = 12),
                   
                   box(p(strong("Please select the output folder")),
-                    shinyDirButton("outf", "Output folder", "Please select the output folder"), width = 12)
+                    shinyDirButton("outf", "Output folder", "Please select the output folder", icon=icon("exclamation-circle")), width = 12)
                   
         )),
         

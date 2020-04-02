@@ -52,7 +52,32 @@ server <- function(input, output, session) {
     return(parseDirPath(volumes, input$outf))
   })
   
-  ### Input check
+  ### Input check for running the analysis
+  observe({
+    req(input$sdata)
+    updateActionButton(session, "sdata",
+                       icon = icon("check-circle"))  
+  })
+  
+  observe({
+    req(input$sdata_class)
+    updateActionButton(session, "sdata_class",
+                       icon = icon("check-circle"))  
+  })
+  
+  observe({
+    req(input$cdata)
+    updateActionButton(session, "cdata",
+                       icon = icon("check-circle"))  
+  })
+  
+  observe({
+    req(input$outf)
+    updateActionButton(session, "outf",
+                       icon = icon("check-circle"))  
+  })
+
+  ### Input check for running the analysis
   observe({
     req(input$sdata)
     req(input$sdata_class)
@@ -96,6 +121,20 @@ server <- function(input, output, session) {
   output$cdatat <- DT::renderDataTable({
     if(is.null(cdat())){return(NULL)}
     DT::datatable(read.delim(cdat(), check.names = F, row.names=1), filter = 'top', options = list(scrollX=T, autoWidth = TRUE, pageLength = 5))})
+  
+##### Load input data
+reactive({
+req(input$sdata)
+req(input$sdata)
+req(input$ref)
+
+sdata <- read.delim(sdat(), check.names=F, row.names=1)
+sdata_class <- read.delim(sdat_class(), check.names=F, row.names=1)
+
+req(input$cdata)
+cdata <- read.delim(cdat(), check.names=F, row.names=1)
+
+})
   
 ###### QC operations
   
@@ -142,7 +181,7 @@ server <- function(input, output, session) {
     valsAttr$Attr_out <- system(paste("Rscript RunBiomarkerBox.R Attribute", outf(), sdat(), sdat_class(), input$ref))
     showModal(modalDialog("The analysis is completed"))
     })
-  
+    
   output$test <- renderPlotly({
     print(
       ggplotly(
