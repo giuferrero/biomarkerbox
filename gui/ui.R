@@ -10,9 +10,14 @@
 source("../utils.R")
 library("markdown")
 library("shinyFiles")
-library("shinyjs")
-
-
+library("shiny")
+library(fs)
+library("ggplot2")
+library("ggthemes")
+library("plotly")
+library("reshape")
+library("ggpubr")
+library("viridis")
 
 ui <- dashboardPage(
   ## Header content
@@ -88,8 +93,8 @@ ui <- dashboardPage(
                 box(h3("Analysis of the sample attributes"), width = 12),
                 box(includeMarkdown("./text/3_Attribute_analysis.md"), status = "info", width = 12),
                 box(actionButton("start_Attr", "Waiting for input data", icon=icon("exclamation-circle")), width = 12),
-                column(width = 6, plotlyOutput("test"))
-        ),
+                box(selectInput("var1", "Please select a covariate", choices = "Pending Upload"), selectInput("var2", "Please select a covariate", choices = "Pending Upload"), width=4),
+                box(plotlyOutput("test"), width=8)),
 
         # Correlation analysis tab
         tabItem(tabName = "PCA",

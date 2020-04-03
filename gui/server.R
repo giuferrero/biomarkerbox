@@ -1,14 +1,5 @@
-library(shiny)
-library(shinyFiles)
-library(fs)
-library(ggplot2)
-library(ggthemes)
-library("plotly")
-library("shinyjs")
-
 ###### Server
 server <- function(input, output, session) {
-  
   
   volumes <- c(Home = fs::path_home())
   
@@ -40,7 +31,7 @@ server <- function(input, output, session) {
   })
   
   ref <- reactive(input$ref)
-  
+
   shinyDirChoose(
     input, 'outf', roots = volumes, session = session
   )
@@ -115,6 +106,7 @@ server <- function(input, output, session) {
     return(NULL)}
     updateSelectInput(session, "ref", choices = names(read.delim(sdat(), check.names = F, row.names=1)))
     updateSelectInput(session, "ref2", choices = names(read.delim(sdat(), check.names = F, row.names=1)))
+    updateSelectInput(session, "var1", choices = names(read.delim(sdat(), check.names = F, row.names=1)))
     return(DT::datatable(read.delim(sdat(), check.names = F, row.names=1), filter = 'top', options = list(scrollX=T, autoWidth = TRUE, pageLength = 5)))
     })
   
@@ -123,16 +115,12 @@ server <- function(input, output, session) {
     DT::datatable(read.delim(cdat(), check.names = F, row.names=1), filter = 'top', options = list(scrollX=T, autoWidth = TRUE, pageLength = 5))})
   
 ##### Load input data
-reactive({
+sdata <- reactive({
 req(input$sdata)
 req(input$sdata)
 req(input$ref)
 
 sdata <- read.delim(sdat(), check.names=F, row.names=1)
-sdata_class <- read.delim(sdat_class(), check.names=F, row.names=1)
-
-req(input$cdata)
-cdata <- read.delim(cdat(), check.names=F, row.names=1)
 
 })
   
@@ -182,11 +170,21 @@ cdata <- read.delim(cdat(), check.names=F, row.names=1)
     showModal(modalDialog("The analysis is completed"))
     })
     
+   var1 <- reactive(input$var1)
+   
   output$test <- renderPlotly({
-    print(
-      ggplotly(
-        ggplot(data = mtcars, aes(x = disp, y = cyl)) + geom_smooth(method = lm, formula = y~x) + geom_point() + theme_bw()))})
-
+    print(ggplotly(
+        ggplot(data = sdata(), aes_string(x = input$ref, y = paste0("`",input$var1,"`"), fill = input$ref)) + 
+    geom_violin(trim=FALSE, alpha=0.5) + 
+    geom_jitter(position = position_jitter(0.2), alpha=0.5) + 
+    geom_boxplot(width = 0.05, fill="white", outlier.alpha = 0) +
+    labs(x=input$ref, fill=input$ref)  + 
+    theme_bw() + 
+    theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust=0.5)) +
+    scale_fill_viridis(discrete=T)
+    #stat_compare_means(comparisons = totest_p, label = "p.signif", method = "wilcox.test", hide.ns=F)
+    ))})
+  
 ###### PCA analysis operations   
 
   observeEvent(input$start_PCA, {
