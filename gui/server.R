@@ -106,7 +106,9 @@ server <- function(input, output, session) {
     return(NULL)}
     updateSelectInput(session, "ref", choices = names(read.delim(sdat(), check.names = F, row.names=1)))
     updateSelectInput(session, "ref2", choices = names(read.delim(sdat(), check.names = F, row.names=1)))
-    updateSelectInput(session, "var1", choices = names(read.delim(sdat(), check.names = F, row.names=1)))
+    updateSelectInput(session, "attrvar1", choices = names(read.delim(sdat(), check.names = F, row.names=1)))
+    updateSelectInput(session, "corvar1", choices = names(read.delim(sdat(), check.names = F, row.names=1)))
+    updateSelectInput(session, "corvar2", choices = names(read.delim(sdat(), check.names = F, row.names=1)))
     return(DT::datatable(read.delim(sdat(), check.names = F, row.names=1), filter = 'top', options = list(scrollX=T, autoWidth = TRUE, pageLength = 5)))
     })
   
@@ -170,11 +172,11 @@ sdata <- read.delim(sdat(), check.names=F, row.names=1)
     showModal(modalDialog("The analysis is completed"))
     })
     
-   var1 <- reactive(input$var1)
+  attrvar1 <- reactive(input$attrvar1)
    
-  output$test <- renderPlotly({
+  output$attrplot1 <- renderPlotly({
     print(ggplotly(
-        ggplot(data = sdata(), aes_string(x = input$ref, y = paste0("`",input$var1,"`"), fill = input$ref)) + 
+        ggplot(data = sdata(), aes_string(x = input$ref, y = paste0("`",input$attrvar1,"`"), fill = input$ref)) + 
     geom_violin(trim=FALSE, alpha=0.5) + 
     geom_jitter(position = position_jitter(0.2), alpha=0.5) + 
     geom_boxplot(width = 0.05, fill="white", outlier.alpha = 0) +
@@ -184,6 +186,16 @@ sdata <- read.delim(sdat(), check.names=F, row.names=1)
     scale_fill_viridis(discrete=T)
     #stat_compare_means(comparisons = totest_p, label = "p.signif", method = "wilcox.test", hide.ns=F)
     ))})
+  
+  output$attrout1 <- renderText(
+    if(is.null(sdat())){return("Please insert the input data")}
+    else if(class(sdata()[,input$attrvar1]) == "numeric"){
+       return(kruskal.test(sdata()[,input$attrvar1]~sdata()[,input$ref])$p.value)
+      }
+    else{
+    return("Please select a numeric covariate")
+    }  
+    )
   
 ###### PCA analysis operations   
 
@@ -217,8 +229,40 @@ sdata <- read.delim(sdat(), check.names=F, row.names=1)
     
     showModal(modalDialog("The analysis is completed"))
     
-  })  
+  })
   
+  corvar1 <- reactive(input$corvar1)
+  corvar2 <- reactive(input$corvar2)
+  
+  output$corplot1 <- renderPlotly({
+    print(ggplotly(
+      ggplot(data = sdata(), aes_string(x = paste0("`",input$corvar1,"`"), y = paste0("`",input$corvar2,"`"), fill = input$ref)) + 
+        geom_point() +
+        labs(fill=input$ref)  + 
+        theme_bw() + 
+        theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust=0.5)) +
+        scale_fill_viridis(discrete=T)
+    ))})
+
+  output$corrout1 <- renderText(
+    if(is.null(sdat())){return("Please insert the input data")}
+    else if(class(sdata()[,input$attrvar1]) == "numeric"){
+      res_p=cor.test(sdata()[,input$corvar1], sdata()[,input$corvar2], na.action="complete.case", method="pearson")
+      return(cat(paste0("r = ", res_p$coeff, "\n", "p-value =", res_p$p.value)))
+    }
+    else{
+      return("Please select a numeric covariate")
+    })
+  
+  output$corrout2 <- renderText(
+    if(is.null(sdat())){return("Please insert the input data")}
+    else if(class(sdata()[,input$attrvar1]) == "numeric"){
+      res_s=cor.test(sdata()[,input$corvar1], sdata()[,input$corvar2], na.action="complete.case", method="spearman")
+      return(cat(paste0("rho = ", res_s$coeff, "\n", "p-value =", res_s$p.value)))
+    }
+    else{
+      return("Please select a numeric covariate")
+    })
 ###### Differential analysis operations   
   
   observeEvent(input$start_Diff, {
