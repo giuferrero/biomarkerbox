@@ -11,13 +11,13 @@ source("../utils.R")
 library("markdown")
 library("shinyFiles")
 library("shiny")
-library(fs)
+library("fs")
 library("ggplot2")
 library("ggthemes")
 library("plotly")
 library("reshape")
-library("ggpubr")
 library("viridis")
+library("ggfortify")
 
 ui <- dashboardPage(
   ## Header content
@@ -108,7 +108,11 @@ ui <- dashboardPage(
                 box(h3("PCA analysis of the sample attributes"), width = 12),
                 box(includeMarkdown("./text/7_PCA_analysis.md"), status = "info", width = 12),
                 box(p(strong("Run the automatic analysis")),
-                    actionButton("start_PCA", "Waiting for input data", icon=icon("exclamation-circle")))
+                    actionButton("start_PCA", "Waiting for input data", icon=icon("exclamation-circle")),
+                    width = 12),
+                box(selectInput("pcavar1", "Please select a covariate", choices = "Pending Upload"), 
+                    p(strong("Explained variance")), textOutput("pcaout1"), width=4),
+                box(plotlyOutput("pcaplot1"), width=8)
         )),
         
         # Correlation analysis tab

@@ -94,6 +94,7 @@ server <- function(input, output, session) {
     updateSelectInput(session, "attrvar1", choices = names(read.delim(sdat(), check.names = F, row.names=1)))
     updateSelectInput(session, "corvar1", choices = names(read.delim(sdat(), check.names = F, row.names=1)))
     updateSelectInput(session, "corvar2", choices = names(read.delim(sdat(), check.names = F, row.names=1)))
+    updateSelectInput(session, "pcavar1", choices = names(read.delim(sdat(), check.names = F, row.names=1)))
     return(DT::datatable(read.delim(sdat(), check.names = F, row.names=1), filter = 'top', options = list(scrollX=T, autoWidth = TRUE, pageLength = 5)))
     })
   
@@ -104,11 +105,27 @@ server <- function(input, output, session) {
 ##### Load input data
 sdata <- reactive({
 req(input$sdata)
-req(input$sdata)
-req(input$ref)
 
 sdata <- read.delim(sdat(), check.names=F, row.names=1)
 
+})
+
+cdata <- reactive({
+  req(input$cdata)
+  
+  sdata <- read.delim(cdat(), check.names=F, row.names=1)
+  
+})
+
+cdata.pca <- reactive({
+  req(input$cdata)
+  req(input$sdata)
+  
+  cdata <- cdata()[, row.names(sdata())]
+  
+  cdata.pca <- prcomp(log(t(cdata)+1,2), center=T, scale=T)
+  cdata.pca <- cbind(cdata.pca$x, sdata())
+  
 })
   
 ###### QC operations
@@ -192,8 +209,34 @@ sdata <- read.delim(sdat(), check.names=F, row.names=1)
     valsPCA$PCA_out <- system(paste("Rscript RunBiomarkerBox.R PCA", outf(), sdat(), input$ref))
     
     showModal(modalDialog("The analysis is completed"))
+  })  
+  
+  pcavar1 <- reactive(input$pcavar1)
+  
+  output$pcaplot1 <- renderPlotly({
     
-  })    
+    #p <- fviz_eig(cdata.pca, ggthem = theme_bw(), main=NULL)
+    #cdata.pca <- cbind(cdata.pca$x, sdata()[,input$pcavar1])
+    
+    print(ggplotly(
+      ggplot(cdata.pca(), aes_string(x="PC1", y="PC2", col=paste0("`",input$pcavar1,"`")))+
+        geom_point()+
+        theme_bw() + 
+        theme(legend.position="top") + 
+     #   labs(colour=covid2) +
+        scale_fill_viridis(discrete=T)))
+  })
+  
+  output$pcaout1 <- renderText(
+    if(is.null(cdat())){return("Please insert the input data")}
+    else if(class(sdata()[,input$corvar1]) == "numeric" & class(sdata()[,input$corvar2]) == "numeric"){
+      res_p=cor.test(sdata()[,input$corvar1], sdata()[,input$corvar2], na.action="complete.case", method="pearson")
+      return(paste0("Pearson's r = ", round(res_p$estimate,4), "\n\n", "p-value =", round(res_p$p.value,4)))
+    }
+    else{
+      
+      return("Please select two numeric covariates")
+    })
 
 ###### Correlation analysis operations 
   
@@ -243,6 +286,7 @@ sdata <- read.delim(sdat(), check.names=F, row.names=1)
     else{
       return("Please select two numeric covariates")
     })
+  
 ###### Differential analysis operations   
   
   observeEvent(input$start_Diff, {
