@@ -11,7 +11,6 @@ always_allow_html: yes
 params:
   outfolder: ""
   pdata: ""
-  covclass: ""
   rthreshold: ""
   pvalthreshold: ""
 date: "`r format(Sys.time(), '%d %B, %Y')`"
@@ -35,18 +34,6 @@ outf <- paste0(params$outfolder, "/02_Attribute_Analysis/")
 # Table containing the sample attributes
 phenoData <- read.delim(params$pdata, row.names=1, check.names = F)
 
-# List reporting the class of each sample attribute
-covariates <- read.delim(params$covclass)
-```
-
-```{r setclass, echo=FALSE, message=FALSE, warning=FALSE, results="asis", comment=NA} 
-#### Defining the class of the sample attribute
-  for(i in 1:ncol(phenoData)){
-    if(as.character(covariates[,2][i]) == "factor"){
-      phenoData[, i] = as.factor(phenoData[, i])}
-    else{
-      class(phenoData[, i]) = as.character(covariates[,2][i])}
-  }
 ```
 
 ```{r norm, echo=FALSE, message=FALSE, warning=FALSE, results="asis", comment=NA}

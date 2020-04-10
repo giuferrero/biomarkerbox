@@ -60,8 +60,6 @@ ui <- dashboardPage(
                 
                   box(DT::dataTableOutput("sdatat"), width = 12),
                   
-                  box(p(strong("Please select the file reporting the classes of the sample variables")),
-                    shinyFilesButton("sdata_class", "Sample data type", "Please select a file reporting the types of the sample data variables", multiple = F, icon=icon("exclamation-circle")), width = 12),
                   box(selectInput("ref", "Please select the reference covariate", choices = "Pending Upload"), width = 12),
                   
                   box(p(strong("Please select the file reporting the count data file")),
@@ -127,6 +125,7 @@ ui <- dashboardPage(
                     selectInput("corvar2", "Please select a covariate", choices = "Pending Upload"), 
                     p(strong("Results from Pearson correlation test")),
                     textOutput("corrout1"),
+                    p(" "),
                     p(strong("Results from Spearman correlation test")),
                     textOutput("corrout2"),
                     width=4),

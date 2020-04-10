@@ -12,14 +12,6 @@ server <- function(input, output, session) {
     return(parseFilePaths(volumes, input$sdata)$datapath)
     })
 
-  shinyFileChoose(input, "sdata_class", roots = volumes, session = session)
-  
-  sdat_class <- reactive({
-    req(input$sdata_class)
-    if (is.null(input$sdata_class))
-      return(NULL)
-    return(parseFilePaths(volumes, input$sdata_class)$datapath)
-  })
   
   shinyFileChoose(input, "cdata", roots = volumes, session = session)
   
@@ -51,12 +43,6 @@ server <- function(input, output, session) {
   })
   
   observe({
-    req(input$sdata_class)
-    updateActionButton(session, "sdata_class",
-                       icon = icon("check-circle"))  
-  })
-  
-  observe({
     req(input$cdata)
     updateActionButton(session, "cdata",
                        icon = icon("check-circle"))  
@@ -71,7 +57,6 @@ server <- function(input, output, session) {
   ### Input check for running the analysis
   observe({
     req(input$sdata)
-    req(input$sdata_class)
     req(input$ref)
     req(input$outf)
     updateActionButton(session, "start_Attr",
@@ -131,13 +116,12 @@ sdata <- read.delim(sdat(), check.names=F, row.names=1)
   observeEvent(input$start_QC, {
     
     req(input$sdata)
-    req(input$sdata_class)
     req(input$ref)
     req(input$outf)
     req(input$cdata)
     
     valsQC <- reactiveValues()
-    valsQC$QC_out <- system(paste("Rscript RunBiomarkerBox.R QC", outf(), sdat(), cdat(), sdat_class(), input$ref))
+    valsQC$QC_out <- system(paste("Rscript RunBiomarkerBox.R QC", outf(), sdat(), cdat(), input$ref))
     
     showModal(modalDialog("The analysis is completed"))
     
@@ -148,13 +132,12 @@ sdata <- read.delim(sdat(), check.names=F, row.names=1)
   observeEvent(input$start_Pre, {
     
     req(input$sdata)
-    req(input$sdata_class)
     req(input$ref)
     req(input$outf)
     req(input$cdata)
     
     valsPre <- reactiveValues()
-    valsPre$Pre_out <- system(paste("Rscript RunBiomarkerBox.R Preprocessing", outf(), sdat(), cdat(), sdat_class(), input$ref))
+    valsPre$Pre_out <- system(paste("Rscript RunBiomarkerBox.R Preprocessing", outf(), sdat(), cdat(), input$ref))
     showModal(modalDialog("The analysis is completed"))
     
   })
@@ -163,12 +146,11 @@ sdata <- read.delim(sdat(), check.names=F, row.names=1)
     observeEvent(input$start_Attr, {
       
       req(input$sdata)
-      req(input$sdata_class)
       req(input$ref)
       req(input$outf)
       
     valsAttr <- reactiveValues()
-    valsAttr$Attr_out <- system(paste("Rscript RunBiomarkerBox.R Attribute", outf(), sdat(), sdat_class(), input$ref))
+    valsAttr$Attr_out <- system(paste("Rscript RunBiomarkerBox.R Attribute", outf(), sdat(), input$ref))
     showModal(modalDialog("The analysis is completed"))
     })
     
@@ -202,13 +184,12 @@ sdata <- read.delim(sdat(), check.names=F, row.names=1)
   observeEvent(input$start_PCA, {
     
     req(input$sdata)
-    req(input$sdata_class)
     req(input$ref)
     req(input$outf)
     req(input$cdata)
     
     valsPCA <- reactiveValues()
-    valsPCA$PCA_out <- system(paste("Rscript RunBiomarkerBox.R PCA", outf(), sdat(), sdat_class(), input$ref))
+    valsPCA$PCA_out <- system(paste("Rscript RunBiomarkerBox.R PCA", outf(), sdat(), input$ref))
     
     showModal(modalDialog("The analysis is completed"))
     
@@ -219,13 +200,12 @@ sdata <- read.delim(sdat(), check.names=F, row.names=1)
   observeEvent(input$start_Corr, {
     
     req(input$sdata)
-    req(input$sdata_class)
     req(input$ref)
     req(input$outf)
     req(input$cdata)
     
     valsCorr <- reactiveValues()
-    valsCorr$Corr_out <- system(paste("Rscript RunBiomarkerBox.R Correlation", outf(), sdat(), sdat_class(), input$rcor, input$pcor))
+    valsCorr$Corr_out <- system(paste("Rscript RunBiomarkerBox.R Correlation", outf(), sdat(), input$rcor, input$pcor))
     
     showModal(modalDialog("The analysis is completed"))
     
@@ -246,35 +226,34 @@ sdata <- read.delim(sdat(), check.names=F, row.names=1)
 
   output$corrout1 <- renderText(
     if(is.null(sdat())){return("Please insert the input data")}
-    else if(class(sdata()[,input$attrvar1]) == "numeric"){
+    else if(class(sdata()[,input$corvar1]) == "numeric" & class(sdata()[,input$corvar2]) == "numeric"){
       res_p=cor.test(sdata()[,input$corvar1], sdata()[,input$corvar2], na.action="complete.case", method="pearson")
-      return(cat(paste0("r = ", res_p$coeff, "\n", "p-value =", res_p$p.value)))
+      return(paste0("Pearson's r = ", round(res_p$estimate,4), "\n\n", "p-value =", round(res_p$p.value,4)))
     }
     else{
-      return("Please select a numeric covariate")
+      return("Please select two numeric covariates")
     })
   
   output$corrout2 <- renderText(
     if(is.null(sdat())){return("Please insert the input data")}
-    else if(class(sdata()[,input$attrvar1]) == "numeric"){
+    else if(class(sdata()[,input$corvar1]) == "numeric" & class(sdata()[,input$corvar2]) == "numeric"){
       res_s=cor.test(sdata()[,input$corvar1], sdata()[,input$corvar2], na.action="complete.case", method="spearman")
-      return(cat(paste0("rho = ", res_s$coeff, "\n", "p-value =", res_s$p.value)))
+      return(paste0("Spearman rho = ", round(res_s$estimate,4), "\n\n", "p-value =", round(res_s$p.value,4)))
     }
     else{
-      return("Please select a numeric covariate")
+      return("Please select two numeric covariates")
     })
 ###### Differential analysis operations   
   
   observeEvent(input$start_Diff, {
     
     req(input$sdata)
-    req(input$sdata_class)
     req(input$ref)
     req(input$outf)
     req(input$cdata)
     
     valsDiff <- reactiveValues()
-    valsDiff$Diff_out <- system(paste("Rscript RunBiomarkerBox.R DESeq2", outf(), sdat(), sdat_class(), input$ref, input$ldiff, input$pdiff, input$ref2))
+    valsDiff$Diff_out <- system(paste("Rscript RunBiomarkerBox.R DESeq2", outf(), sdat(), input$ref, input$ldiff, input$pdiff, input$ref2))
     
     showModal(modalDialog("The analysis is completed"))
     
