@@ -80,7 +80,7 @@ write.table(paste0(outhead, outnorm), paste0(outf, "Preprocessing_Table_Normal_d
 ```
 `r outnorm`
 
-An output file named **QC_Table_Normal_distribution.txt** is provided with the summary of this analysis. 
+An output file named **Preprocessing_Table_Normal_distribution.txt** is provided with the summary of this analysis. 
 
 ## Check for outliers
 The numerical variables of the sample table were checked for possible outliers.

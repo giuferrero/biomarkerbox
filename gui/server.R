@@ -206,7 +206,7 @@ cdata.pca <- reactive({
     req(input$cdata)
     
     valsPCA <- reactiveValues()
-    valsPCA$PCA_out <- system(paste("Rscript RunBiomarkerBox.R PCA", outf(), sdat(), input$ref))
+    valsPCA$PCA_out <- system(paste("Rscript RunBiomarkerBox.R PCA", outf(), sdat(), cdat(), input$ref))
     
     showModal(modalDialog("The analysis is completed"))
   })  
@@ -245,7 +245,6 @@ cdata.pca <- reactive({
     req(input$sdata)
     req(input$ref)
     req(input$outf)
-    req(input$cdata)
     
     valsCorr <- reactiveValues()
     valsCorr$Corr_out <- system(paste("Rscript RunBiomarkerBox.R Correlation", outf(), sdat(), input$rcor, input$pcor))

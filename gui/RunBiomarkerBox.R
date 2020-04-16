@@ -41,7 +41,7 @@ if(modality == "QC"){
 }else if(modality == "Correlation"){
   
   # Execution of the correlation analysis
-  rmarkdown::render(paste0(sf,"2b_Correlation_plot.Rmd"), params = list(outfolder=of, pdata = args[2], rthreshold=args[3], pvalthreshold=args[4]), output_format="all")
+  rmarkdown::render(paste0(sf,"2b_Correlation_plot.Rmd"), params = list(outfolder=of, pdata = args[3], rthreshold=args[4], pvalthreshold=args[5]), output_format="all")
   moveout("2b_Correlation_plot")
   
 }else if(modality == "DESeq2"){

@@ -33,7 +33,6 @@ outf <- paste0(params$outfolder, "/02_Attribute_Analysis/")
 
 # Table containing the sample attributes
 phenoData <- read.delim(params$pdata, row.names=1, check.names = F)
-
 ```
 
 ```{r norm, echo=FALSE, message=FALSE, warning=FALSE, results="asis", comment=NA}
@@ -63,16 +62,17 @@ printout <- function(name, plot){
     invisible(dev.off())}
 
 # Definition of a function for the scatterplot
-scatterplot <- function(dat, id1, id2, refcov, inlinep=FALSE){
-  p <- ggplot(data=dat, aes(x=dat[,id1], y=dat[,id2], col=phenoData[,refcov])) + 
+scatterplot <- function(dat, id1, id2, inlinep=FALSE){
+  p <- ggplot(data=dat, aes(x=dat[,id1], y=dat[,id2], col=dat[,ncol(dat)])) + 
     geom_point() +
-    labs(y=id2, x=id1, col=refcov) + 
+    labs(y=id2, x=id1, col=params$refcov) + 
     geom_smooth(method=lm, se=F) +
     theme_bw()
   
   if(inlinep==TRUE){print(p)}
   
-  printout(paste0(outf, "Correlation_Plot_Scatterplot_", id1,"_", id2,".pdf"), p)}
+  printout(paste0(outf, "Correlation_Plot_Scatterplot_", id1,"_", id2,".pdf"), p)
+  }
 ```
 
 ```{r pearson, echo=FALSE, message=FALSE, warning=FALSE, results="asis", comment=NA}
@@ -95,18 +95,24 @@ cat("The following list reports the significant pairs of attributes associated w
 cat(paste(sig_p[,1], sig_p[,2], sep="\tAND\t"), sep="\n\n")
   
 cat("\n\nThe result of this analysis were provided with the files:\n\n **Correlation_Table_Attributes_Pearson_correlation_all.txt**\n\n **Correlation_Table_Attributes_Pearson_correlation_significant.txt**.\n\n", sep="")  
+}else{
+  cat("No significant correlations were observed.\n\n")  
 }
 
 write.table(out_p, paste0(outf, "Correlation_Table_Attributes_Pearson_correlation_all.txt"), quote=F, row.names=F, sep="\t")
 
 write.table(sig_p,  paste0(outf,"Correlation_Table_Attributes_Pearson_correlation_significant.txt"), quote=F, row.names=F, sep="\t")
 
+if(nrow(sig_p)>0){
 cat("In the following are reported the scatter plot of the most significant correlation computed using the Pearson's method and as heat map all the correlation coefficients computed. The scatter plots of all the significant correlations are provided as pdf files with name **Correlation_Plot_Scatterplot_cov1_cov2.pdf** where cov1 and cov2 are the name of the correlated attributes. The heat map was provided as pdf file named **Correlation_Plot_Corrplot_Pearson_correlation.pdf**.\n\n", sep="")
 
-scatterplot(phenoData_num, as.character(sig_p[1,1]), as.character(sig_p[1,2]), refcov, inlinep=T)
+phenoData_num2 <- cbind(phenoData_num, phenoData[,params$refcov])
+
+scatterplot(phenoData_num2, as.character(sig_p[1,1]), as.character(sig_p[1,2]), inlinep=T)
  
 for(i in 1:nrow(sig_p)){
-scatterplot(phenoData_num, as.character(sig_p[i,1]), as.character(sig_p[i,2]), refcov, inlinep=F)}
+scatterplot(phenoData_num2, as.character(sig_p[i,1]), as.character(sig_p[i,2]), inlinep=F)}
+}
 ```
 
 ```{r pears, echo=FALSE, message=FALSE, warning=FALSE, results="hide", comment=NA}
@@ -149,10 +155,12 @@ write.table(sig_s,  paste0(outf,"Correlation_Table_Attributes_Spearman_correlati
 
 cat("In the following are reported the scatter plot of the most significant correlation computed using the Spearman's method and as heat map all the correlation coefficients computed. The scatter plots of all the significant correlations are provided as pdf files with name **Correlation_Plot_Scatterplot_cov1_cov2.pdf** where cov1 and cov2 are the name of the correlated attributes. The heat map was provided as pdf file named **Correlation_Plot_Corrplot_Spearman_correlation.pdf**.\n\n", sep="")
 
-scatterplot(phenoData_num, as.character(sig_s[1,1]), as.character(sig_s[1,2]), refcov, inlinep=T)
+phenoData_num2 <- cbind(phenoData_num, Class = phenoData[,params$refcov])
+
+scatterplot(phenoData_num2, as.character(sig_s[1,1]), as.character(sig_s[1,2]), inlinep=T)
  
 for(i in 1:nrow(sig_p)){
-scatterplot(phenoData_num, as.character(sig_s[i,1]), as.character(sig_s[i,2]), refcov, inlinep=F)}
+scatterplot(phenoData_num2, as.character(sig_s[i,1]), as.character(sig_s[i,2]), inlinep=F)}
 ```
 
 ```{r spear, echo=FALSE, message=FALSE, warning=FALSE, results="hide", comment=NA}

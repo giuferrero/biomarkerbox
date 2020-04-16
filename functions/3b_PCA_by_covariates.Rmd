@@ -74,13 +74,13 @@ print(p)
 dev.off()
 
 ## Generation of PCA plots colored by the reference attribute
-cat("\n\nThe following plot report the result of the PCA colored by the reference sample attribute **", refcov,"**. \n\n", sep="")
+cat("\n\nThe following plot report the result of the PCA colored by the reference sample attribute **", params$refcov,"**. \n\n", sep="")
     
-cov <- phenoData[,refcov]
+cov <- phenoData[,params$refcov]
 dat <- data.frame(cbind(cov, cdatat), check.names=F)
-names(dat)[1] <- refcov
+names(dat)[1] <- params$refcov
 
-outplot <- autoplot(cdata.pca, data = dat, colour = refcov, size=3.5) + theme_bw() + theme(legend.position="top")
+outplot <- autoplot(cdata.pca, data = dat, colour = params$refcov, size=3.5) + theme_bw() + theme(legend.position="top")
 print(outplot)
 
 ## Generation of PCA plots colored by the different attributes
