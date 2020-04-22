@@ -12,7 +12,6 @@ server <- function(input, output, session) {
     return(parseFilePaths(volumes, input$sdata)$datapath)
     })
 
-  
   shinyFileChoose(input, "cdata", roots = volumes, session = session)
   
   cdat <- reactive({
@@ -64,10 +63,6 @@ server <- function(input, output, session) {
                        icon = icon("play-circle"))
     req(input$cdata)
     updateActionButton(session, "start_QC",
-                       label = "Run the analysis",
-                       icon = icon("play-circle"))
-    
-    updateActionButton(session, "start_Pre",
                        label = "Run the analysis",
                        icon = icon("play-circle"))
     
@@ -142,21 +137,6 @@ cdata.pca <- reactive({
     
     showModal(modalDialog("The analysis is completed", footer = modalButton("OK")))
   })
-
-###### Pre-processing analysis operations
-
-  observeEvent(input$start_Pre, {
-    
-    req(input$sdata)
-    req(input$ref)
-    req(input$outf)
-    req(input$cdata)
-    
-    valsPre <- reactiveValues()
-    valsPre$Pre_out <- system(paste("Rscript RunBiomarkerBox.R Preprocessing", outf(), sdat(), cdat(), input$ref))
-    showModal(modalDialog("The analysis is completed"), footer = modalButton("OK"))
-    
-  })
   
 ###### Attribute analysis operations
     observeEvent(input$start_Attr, {
@@ -217,7 +197,7 @@ cdata.pca <- reactive({
     
     print(ggplotly(
       ggplot(cdata.pca(), aes_string(x="PC1", y="PC2", col=paste0("`",input$pcavar1,"`")))+
-        geom_point()+
+        geom_point(size=2)+
         theme_bw() + 
         theme(legend.position="top") + 
      #   labs(colour=covid2) +

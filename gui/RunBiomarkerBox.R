@@ -26,12 +26,6 @@ if(modality == "QC"){
   rmarkdown::render(paste0(sf,"1a_Data_QC.Rmd"), params = list(outfolder=of, pdata = args[3], cdata = args[4], refcov = args[5]), output_format="all")
   moveout("1a_Data_QC")
   
-}else if(modality == "Preprocessing"){
-
-  # Execution of the data preprocessing analysis
-  rmarkdown::render(paste0(sf,"1b_Preprocessing.Rmd"), params = list(outfolder=of, pdata = args[3], cdata = args[4], refcov = args[5]), output_format="all")
-  moveout("1b_Preprocessing")
-
 }else if(modality == "Attribute"){
   
   # Execution of the attribute analysis

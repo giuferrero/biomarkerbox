@@ -68,10 +68,6 @@ The reference sample attribute is **`r refcov`**. The reference attribute is div
   if(length(clack) > 0){out=paste(out, "\nThe following ID(s) of the count table is/are not present in the samples table:\n ", paste(clack, collapse = ", "), sep="\n")}
   if(length(plack) > 0){out=paste(out, "\nThe following ID(s) of the sample table is/are not present in the count table\n: ", paste(plack, collapse = ", "), sep="\n")}
   }
-
-outhead <- "QC report: Sample consistency analysis\n"
-
-write.table(paste0(outhead, out), paste0(outf, "QC_Table_Sample_control.txt"), quote = F, row.names=F, col.names=F, sep="\t")
 ```
 `r out`
 
@@ -102,10 +98,8 @@ if(sum(is.na(countData)) == 0){
   outc <- paste(outc, "\nThe following sample(s) in the count data contain(s) at least one NA value:\n", paste(NAcolc, collapse=", "), sep="\n") 
 }
 outhead <- "QC report: NA values analysis\n"
-
-# Write of the output file
-write.table(paste0(outhead, outp, outc), paste0(outf, "QC_Table_NA_report.txt"), quote=F, row.names=F, col.names=F, sep="\t")
 ```
+
 `r paste(outp, outc, sep="\n")`
 
 ## Check for the presence of non numeric values in the count table
@@ -121,25 +115,98 @@ if(sum(!sapply(countData, is.numeric)) == 0){
   outc <- paste0("\nThe count table contains non numeric values in ", length(Numcolc), " sample(s).")
   outc <- paste(outc, "\nThe following sample(s) in the count data contain(s) at least one non numeric value:\n", paste(Numcolc, collapse=", "), sep="\n") 
 }
-outhead <- "QC report: Non numeric count values analysis\n"
-
-# Write of the output file
-write.table(paste0(outhead, outc), paste0(outf, "QC_Table_Non_numeric_counts_report.txt"), quote=F, row.names=F, col.names=F, sep="\t")
 ```
 `r paste(outc)`
 
-An output file named **QC_Table_Non_numeric_counts_report.txt** is provided with the summary of this analysis.
+## Check for normal distribution
+The distribution of the numeric attributes of the sample table were checked for normality using the Shapiro-Wilk test.
 
-```{r blockfile, echo=FALSE, message=FALSE, warning=FALSE}
-# If QC controls are passed a file named QC_passed.txt is generated.
-if(checkna==1 && checkname==1 && checknumeric==1){write.table("", paste0(outf, "QC_passed.txt")) }
+```{r norm, echo=FALSE, message=FALSE, warning=FALSE}
+# Isolation of the numeric sample attributes
+phenoData_num <- phenoData[,unlist(lapply(phenoData, is.numeric))]
+phenoData_num <- phenoData_num %>% select_if(~ length(unique(.)) > 1)
+
+# Shapiro-Wilk test to verify the normality distribution of each attribute
+resnorm <- unlist(mapply(shapiro.test, phenoData_num)["p.value",])
+
+# Analysis of the normality test results
+if(sum(resnorm > 0.05) == 0){
+  outnorm <- "\nNone attribute of the sample table is normally distributed."}else{
+  Normcolp <- names(phenoData_num)[resnorm > 0.05]  
+  outnorm <- paste0("\nThe following attribute(s) of the sample table is(are) normally distributed:\n", paste(Normcolp, collapse=", "), sep="\n")}
+
+outhead <- "Preprocessing report: Normal distribution analysis\n"
+
+# Write of the output file
+write.table(paste0(outhead, outnorm), paste0(outf, "Preprocessing_Table_Normal_distribution.txt"), quote=F, row.names=F, col.names=F, sep="\t")
 ```
+`r outnorm`
+
+An output file named **Preprocessing_Table_Normal_distribution.txt** is provided with the summary of this analysis. 
+
+## Check for outliers
+The numerical variables of the sample table were checked for possible outliers.
+```{r chechoutlier, echo=FALSE, message=FALSE, warning=FALSE}
+out <<- "Preprocessing report: Outliers analysis\n\n"
+outlier_attr <- c()
+
+# Definition of a function to identify the outliers
+outlier_find <- function(dt, var) {
+  tot <- sum(!is.na(dt[,var]))
+  na1 <- sum(is.na(dt[,var]))
+  m1 <- mean(dt[,var], na.rm = T)
+  med <- median(dt[,var], na.rm = T)
+  outlier <- boxplot.stats(dt[,var])$out
+  dt2 <- dt
+  dt2[,var] <- ifelse(dt[,var] %in% outlier, NA, dt[,var])
+  na2 <- sum(is.na(dt2[,var]))
+  m2 <- mean(dt2[,var], na.rm = T)
+  
+  if(length(outlier > 0)){
+  outlier_attr <<- c(outlier_attr, var)
+  out <<- paste0(out, "The sample attribute \"", var, "\" presents outliers.",
+  "\nOutliers identified: ", na2 - na1, " from ", tot, " observations\n",
+  "\nMean with outliers: ", round(m1,3),
+  "\nMean without outliers: ", round(m2,3), 
+  "\nMedian without outliers: ", round(med,3), "\n\n") } else{
+  out <<- paste0(out, "The sample attribute ", var, " does not present an outlier.\n\n")
+  }}
+
+# Application of the function on each numerical attributes
+for(i in 1:ncol(phenoData_num)){
+  outlier_find(phenoData_num, names(phenoData_num)[i])}
+
+if(length(outlier_attr)){
+    outoutlier <- paste0("The following sample attribute(s) present at least one outlier:\n", paste(outlier_attr, collapse=", "))
+}else{outoutlier <- paste0("None sample attributes present at least one outlier.")}
+
+# Write of the output file
+write.table(out, paste0(outf,"Preprocessing_Table_Outlier_analysis.txt"), quote=F, row.names=F, col.names=F, sep="\t")
+```
+`r outoutlier`
+
+```{r outlierplot, echo=FALSE, message=FALSE, warning=FALSE}
+l <- list()
+# For attributes with outliers report of their distribution
+if(length(outlier_attr)>0){
+for(i in 1:length(outlier_attr)){
+  var <- outlier_attr[i]
+  
+  p <- ggplot(phenoData_num, aes(x = phenoData_num[,var])) + geom_density(colour="black", fill="white", alpha=0.8) + geom_rug(alpha=0.05) + theme_bw() + labs(x=var) + ggtitle(paste0("Distribution of the ", var, " attribute"))
+  
+  pdf(paste0(outf,"Preprocessing_Plot_Outlier_analysis_histogram_", var, ".pdf"))
+  print(p)
+  dev.off()
+}}
+```
+
+An output file named **Preprocessing_Table_Outlier_analysis.txt** is provided reporting, if present, the outlier values identified with computation of the mean of each attribute with or without outliers. If present, for each attribute presenting an outlier, an histogram plot names **Preprocessing_Plot_Outlier_analysis_histogram_(attribute).pdf** (attribute = identifier of the attribute considered) was provided.
 
 ## Output files
 The following output files were generated:
 
-* QC_Table_Sample_control.txt
-* QC_Table_NA_values_analysis.txt
-* QC_Table_Non_numeric_counts_report.txt
+* Preprocessing_Table_Normal_distribution_analysis.txt
+* Preprocessing_Table_Outlier_analysis.txt
+* Preprocessing_Plot_Outlier_analysis_histogram_(attribute).pdf (attribute = identifier of the attribute considered)
 
 All the output file were generated in the folder **01_QC_and_Data_Preprocessing**

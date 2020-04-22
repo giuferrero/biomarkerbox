@@ -30,12 +30,13 @@ ui <- dashboardPage(
   dashboardSidebar(
     tags$head(
       tags$link(rel = "stylesheet", type = "text/css", href = "custom.css"),
-      tags$script(src = "custom.js")
+      tags$script(src = "custom.js"),
+      tags$style(".fa-exclamation-circle {color:#E7CB19}"),
+      tags$style(".fa-check-circle {color:#19E71F}")
     ),
     sidebarMenu(
       menuItem("Input", tabName = "input", icon = icon("table")),
-      menuItem("QC", tabName = "qc", icon = icon("tasks")),
-      menuItem("Pre-processing analysis", tabName = "pre", icon = icon("th")),
+      menuItem("QC and Preprocessing", tabName = "qc", icon = icon("tasks")),
       menuItem("Attribute analysis", tabName = "attr", icon = icon("th")),
       menuItem("PCA analysis", tabName = "PCA", icon = icon("th")),
       menuItem("Correlation analysis", tabName = "corr", icon = icon("th")),
@@ -60,12 +61,14 @@ ui <- dashboardPage(
                   
                   box(p(strong("Please select a sample data file")),
                     shinyFilesButton("sdata", label="Sample data", title="Please select a sample data file", multiple = F, icon=icon("exclamation-circle")),
+                    p(tags$br()),
                     DT::dataTableOutput("sdatat"), width = 12),
                   
                   box(selectInput("ref", "Please select the reference covariate", choices = "Pending Upload"), width = 12),
                   
                   box(p(strong("Please select the file reporting the count data file")),
-                    shinyFilesButton("cdata", "Count data", "Please select a count data file", multiple = F, icon=icon("exclamation-circle")), 
+                    shinyFilesButton("cdata", "Count data", "Please select a count data file", multiple = F, icon=icon("exclamation-circle")),
+                    p(tags$br()),
                     DT::dataTableOutput("cdatat"), width = 12),
                   
                   box(p(strong("Please select the output folder")),
@@ -81,15 +84,6 @@ ui <- dashboardPage(
                 box(p(strong("Run the automatic analysis")),
                     actionButton("start_QC", "Waiting for input data", icon=icon("exclamation-circle")))
         )),
-        
-        # Pre-proccesing analysis tabe
-        tabItem(tabName = "pre",
-                fluidRow(
-                box(h3("Pre-processing analysis of the data"), width = 12),
-                box(includeMarkdown("./text/2_Preprocessing.md"), status = "info", width = 12),
-                box(p(strong("Run the automatic analysis")),
-                    actionButton("start_Pre", "Waiting for input data", icon=icon("exclamation-circle")))
-        )),   
       
         # Attribute analysis tab
         tabItem(tabName = "attr",
