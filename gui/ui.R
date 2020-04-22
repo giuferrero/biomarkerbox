@@ -32,7 +32,8 @@ ui <- dashboardPage(
       tags$link(rel = "stylesheet", type = "text/css", href = "custom.css"),
       tags$script(src = "custom.js"),
       tags$style(".fa-exclamation-circle {color:#E7CB19}"),
-      tags$style(".fa-check-circle {color:#19E71F}")
+      tags$style(".fa-check-circle {color:#19E71F}"),
+      tags$style(".fa-play-circle {color:#11D4F3}")
     ),
     sidebarMenu(
       menuItem("Input", tabName = "input", icon = icon("table")),

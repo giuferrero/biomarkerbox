@@ -197,7 +197,7 @@ cdata.pca <- reactive({
     
     print(ggplotly(
       ggplot(cdata.pca(), aes_string(x="PC1", y="PC2", col=paste0("`",input$pcavar1,"`")))+
-        geom_point(size=2)+
+        geom_point(size=2, alpha=0.75)+
         theme_bw() + 
         theme(legend.position="top") + 
      #   labs(colour=covid2) +
@@ -235,7 +235,7 @@ cdata.pca <- reactive({
   output$corplot1 <- renderPlotly({
     print(ggplotly(
       ggplot(data = sdata(), aes_string(x = paste0("`",input$corvar1,"`"), y = paste0("`",input$corvar2,"`"), fill = input$ref)) + 
-        geom_point() +
+        geom_point(size=2, alpha=0.75) +
         labs(fill=input$ref)  + 
         theme_bw() + 
         theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust=0.5)) +
