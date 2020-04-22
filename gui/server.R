@@ -95,12 +95,12 @@ server <- function(input, output, session) {
     updateSelectInput(session, "corvar1", choices = names(read.delim(sdat(), check.names = F, row.names=1)))
     updateSelectInput(session, "corvar2", choices = names(read.delim(sdat(), check.names = F, row.names=1)))
     updateSelectInput(session, "pcavar1", choices = names(read.delim(sdat(), check.names = F, row.names=1)))
-    return(DT::datatable(read.delim(sdat(), check.names = F, row.names=1), filter = 'top', options = list(scrollX=T, autoWidth = TRUE, pageLength = 5)))
+    return(DT::datatable(read.delim(sdat(), check.names = F, row.names=1), filter = 'none', options = list(scrollX=T, autoWidth = TRUE, pageLength = 5)))
     })
   
   output$cdatat <- DT::renderDataTable({
     if(is.null(cdat())){return(NULL)}
-    DT::datatable(read.delim(cdat(), check.names = F, row.names=1), filter = 'top', options = list(scrollX=T, autoWidth = TRUE, pageLength = 5))})
+    DT::datatable(read.delim(cdat(), check.names = F, row.names=1), filter = 'none', options = list(scrollX=T, autoWidth = TRUE, pageLength = 5))})
   
 ##### Load input data
 sdata <- reactive({
@@ -140,8 +140,7 @@ cdata.pca <- reactive({
     valsQC <- reactiveValues()
     valsQC$QC_out <- system(paste("Rscript RunBiomarkerBox.R QC", outf(), sdat(), cdat(), input$ref))
     
-    showModal(modalDialog("The analysis is completed"))
-    
+    showModal(modalDialog("The analysis is completed", footer = modalButton("OK")))
   })
 
 ###### Pre-processing analysis operations
@@ -155,7 +154,7 @@ cdata.pca <- reactive({
     
     valsPre <- reactiveValues()
     valsPre$Pre_out <- system(paste("Rscript RunBiomarkerBox.R Preprocessing", outf(), sdat(), cdat(), input$ref))
-    showModal(modalDialog("The analysis is completed"))
+    showModal(modalDialog("The analysis is completed"), footer = modalButton("OK"))
     
   })
   
@@ -168,8 +167,7 @@ cdata.pca <- reactive({
       
     valsAttr <- reactiveValues()
     valsAttr$Attr_out <- system(paste("Rscript RunBiomarkerBox.R Attribute", outf(), sdat(), input$ref))
-    showModal(modalDialog("The analysis is completed"))
-    })
+    showModal(modalDialog("The analysis is completed", footer = modalButton("OK")))    })
     
   attrvar1 <- reactive(input$attrvar1)
    
@@ -208,8 +206,7 @@ cdata.pca <- reactive({
     valsPCA <- reactiveValues()
     valsPCA$PCA_out <- system(paste("Rscript RunBiomarkerBox.R PCA", outf(), sdat(), cdat(), input$ref))
     
-    showModal(modalDialog("The analysis is completed"))
-  })  
+    showModal(modalDialog("The analysis is completed", footer = modalButton("OK")))  })  
   
   pcavar1 <- reactive(input$pcavar1)
   
@@ -249,8 +246,7 @@ cdata.pca <- reactive({
     valsCorr <- reactiveValues()
     valsCorr$Corr_out <- system(paste("Rscript RunBiomarkerBox.R Correlation", outf(), sdat(), input$rcor, input$pcor))
     
-    showModal(modalDialog("The analysis is completed"))
-    
+    showModal(modalDialog("The analysis is completed", footer = modalButton("OK")))    
   })
   
   corvar1 <- reactive(input$corvar1)
@@ -298,8 +294,7 @@ cdata.pca <- reactive({
     valsDiff <- reactiveValues()
     valsDiff$Diff_out <- system(paste("Rscript RunBiomarkerBox.R DESeq2", outf(), sdat(), input$ref, input$ldiff, input$pdiff, input$ref2))
     
-    showModal(modalDialog("The analysis is completed"))
-    
+    showModal(modalDialog("The analysis is completed", footer = modalButton("OK")))    
   })
   
 ###### Machine Learning analysis operations

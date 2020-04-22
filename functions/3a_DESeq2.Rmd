@@ -21,13 +21,25 @@ date: "`r format(Sys.time(), '%d %B, %Y')`"
 
 ```{r setup, include=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-library("DESeq2")
-library("ggplot2")
-library("reshape")
-library("ggpubr")
-library("viridis")
-library("UpSetR")
-library("EnhancedVolcano")
+
+# Check if the required packages are installed and load them
+packages <- c("dplyr", "ggplot2", "DESeq2", "reshape", "ggpubr", "UpSetR", "EnhancedVolcano")
+
+for(i in 1:length(packages)){
+  if(packages[i] %in% rownames(installed.packages()) == FALSE){
+    if (packages[i] == "DESeq2"){
+        if (!requireNamespace("BiocManager", quietly = TRUE))
+           install.packages("BiocManager")
+        BiocManager::install("DESeq2")
+    } else if (packages[i] == "EnhancedVolcano"){
+        if (!requireNamespace("BiocManager", quietly = TRUE))
+          install.packages("BiocManager")
+        BiocManager::install("EnhancedVolcano")
+    } else{
+        install.packages(packages[i])
+    }}}
+
+invisible(lapply(packages, library, character.only = TRUE))
 ```
 
 ```{r plotting, echo=FALSE, message=FALSE, warning=FALSE} 

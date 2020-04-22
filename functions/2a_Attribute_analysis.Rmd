@@ -17,12 +17,17 @@ params:
 In this document are reported the result of the analysis of the samples attributes reported in the **`r basename(params$pdata)`** file.
 
 ```{r setup, include=FALSE, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+# Check if the required packages are installed and load them
 knitr::opts_chunk$set(echo = TRUE)
-library("dplyr")
-library("ggplot2")
-library("reshape")
-library("ggpubr")
-library("viridis")
+
+packages <- c("dplyr", "ggplot2", "reshape", "ggpubr", "viridis")
+
+for(i in 1:length(packages)){
+  if(packages[i] %in% rownames(installed.packages()) == FALSE)
+    install.packages(packages[i])
+}
+
+invisible(lapply(packages, library, character.only = TRUE))
 ```
 
 ```{r reading, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
@@ -127,13 +132,22 @@ printout <- function(name, plot){
 
 # Definition of a function for the stacked bar plot
 stackedbar <- function(dat, covid, inlinep=FALSE){
-  p <- ggplot(data=dat, aes(x=Var1, y=Freq, fill=Var2)) + geom_bar(stat="identity") + labs(y="Fraction of sample", x="Sample classes", fill=covid) + theme_bw() + scale_fill_viridis(discrete=T)
+  p <- ggplot(data=dat, aes(x=Var1, y=Freq, fill=Var2)) +
+    geom_bar(stat="identity") + 
+    labs(y="Fraction of sample", x="Sample classes", fill=covid) + 
+    theme_bw() + scale_fill_viridis(discrete=T)
+  
   if(inlinep==TRUE){print(p)}
   printout(paste0(outf, "Attribute_analysis_Plot_Stacked_barplot_", covid, ".pdf"), p)}
 
 # Definition of a function for the grouped bar plot
 groupedbar <- function(dat, covid, inlinep=FALSE){
-    p <- ggplot(data=dat, aes(x=Var1, y=Freq, fill=Var2)) + geom_bar(stat="identity", position = position_dodge(0.9)) + labs(y=covid, x="Sample classes", fill=covid) + theme_bw() + scale_fill_viridis(discrete=T)
+    p <- ggplot(data=dat, aes(x=Var1, y=Freq, fill=Var2)) +
+      geom_bar(stat="identity", position = position_dodge(0.9)) +
+      labs(y=covid, x="Sample classes", fill=covid) +
+      theme_bw() +
+      scale_fill_viridis(discrete=T)
+    
   if(inlinep==TRUE){print(p)}
   printout(paste0(outf, "Attribute_analysis_Plot_Grouped_barplot_", covid, ".pdf"), p)}
 

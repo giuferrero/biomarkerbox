@@ -20,11 +20,16 @@ In this document are reported the result of the Principal Component Analysis (PC
 
 ```{r setup, include=FALSE, echo=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-library("RColorBrewer")
-library("gplots")
-library("ggplot2")
-library("ggfortify")
-library("factoextra")
+
+# Check if the required packages are installed and load them
+packages <- c("ggplot2", "gplots", "ggfortify", "factoextra", "viridis")
+
+for(i in 1:length(packages)){
+  if(packages[i] %in% rownames(installed.packages()) == FALSE)
+    install.packages(packages[i])
+}
+
+invisible(lapply(packages, library, character.only = TRUE))
 ```
 
 ```{r reading, echo=FALSE, message=FALSE, warning=FALSE, results="asis"}
@@ -80,7 +85,10 @@ cov <- phenoData[,params$refcov]
 dat <- data.frame(cbind(cov, cdatat), check.names=F)
 names(dat)[1] <- params$refcov
 
-outplot <- autoplot(cdata.pca, data = dat, colour = params$refcov, size=3.5) + theme_bw() + theme(legend.position="top")
+outplot <- autoplot(cdata.pca, data = dat, colour = params$refcov, size=3.5) +
+  theme_bw() + 
+  theme(legend.position="top") +
+  scale_color_viridis(discrete = T)
 print(outplot)
 
 ## Generation of PCA plots colored by the different attributes
@@ -94,9 +102,14 @@ for(i in 1:ncol(phenoData)){
   covid2 <- names(phenoData)[i]
   dat <- data.frame(cbind(cov, cdatat), check.names=T)
   names(dat)[1] <- covid
-    
+  
 	pdf(paste0(outf,"PCA_Plot_PCA_count_data_colored_by_", covid2, ".pdf"), 7, 7)
-	outplot <- autoplot(cdata.pca, data = dat, colour=covid, size=3.5, na.value = "gray") + theme_bw() + theme(legend.position="top") + labs(colour=covid2)
+	outplot <- autoplot(cdata.pca, data = dat, colour=covid, size=3.5, na.value = "gray") + 
+	  theme_bw() + 
+	  theme(legend.position="top") + 
+	  labs(colour=covid2) +
+	  scale_color_viridis(discrete=ifelse(class(phenoData[,i]) == "factor", TRUE, FALSE))
+  
 	print(outplot)
 	dev.off()}
 ```

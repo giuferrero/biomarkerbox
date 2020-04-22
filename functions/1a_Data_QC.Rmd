@@ -35,10 +35,17 @@ cov_class <- levels(phenoData[,refcov])
 ```
 
 ```{r setup, include=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
-# Loading of the packages
+# Check if the required packages are installed and load them
 knitr::opts_chunk$set(echo = TRUE)
-library("dplyr")
-library("ggplot2")
+
+packages <- c("dplyr", "ggplot2")
+
+for(i in 1:length(packages)){
+  if(packages[i] %in% rownames(installed.packages()) == FALSE)
+    install.packages(packages[i])
+}
+
+invisible(lapply(packages, library, character.only = TRUE))
 ```
 
 ## Description of the datasets

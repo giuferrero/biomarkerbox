@@ -19,11 +19,14 @@ In this document are reported the result of the correlation analysis of the nume
 
 ```{r setup, echo=FALSE, message=FALSE, warning=FALSE, results="asis", comment=NA}
 knitr::opts_chunk$set(echo = TRUE)
-library("ggplot2")
-library("corrplot")
-library("Hmisc")
-library("dplyr")
-library("viridis")
+
+# Check if the required packages are installed and load them
+packages <- c("dplyr", "ggplot2", "viridis", "corrplot", "Hmisc")
+
+for(i in 1:length(packages)){
+  if(packages[i] %in% rownames(installed.packages()) == FALSE)
+    install.packages(packages[i])
+}
 ```
 
 ```{r reading, echo=FALSE, message=FALSE, warning=FALSE, results="asis", comment=NA}
