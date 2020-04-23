@@ -7,20 +7,11 @@
 #    http://shiny.rstudio.com/
 #
 
-source("../utils.R")
-library("markdown")
-library("shinyFiles")
-library("shiny")
-library("fs")
-library("ggplot2")
-library("ggthemes")
-library("plotly")
-library("reshape")
-library("viridis")
-library("ggfortify")
-library("corrplot")
-library("Hmisc")
-library("dplyr")
+source("utils.R")
+
+packages <- c("markdown", "shinyFiles", "shiny", "fs", "ggplot2", "ggthemes", "plotly", "reshape", "viridis", "ggfortify", "corrplot", "Hmisc", "dplyr", "DESeq2")
+
+invisible(lapply(packages, library, character.only = TRUE))
 
 ui <- dashboardPage(
   ## Header content
@@ -58,22 +49,31 @@ ui <- dashboardPage(
         tabItem(tabName = "input",
                 fluidRow(
                   box(h3("Input data"),
-                  h5("In this section you can insert the two main files required for the analysis."), status = "info", width = 12),
+                  h5("In this section you can insert the two main files required for the analysis."), status = "primary", width = 12),
                   
-                  box(p(strong("Please select a sample data file")),
+                  box(title = "Input sample data",
+                    p(strong("Please select a sample data file")),
                     shinyFilesButton("sdata", label="Sample data", title="Please select a sample data file", multiple = F, icon=icon("exclamation-circle")),
                     p(tags$br()),
-                    DT::dataTableOutput("sdatat"), width = 12),
+                    DT::dataTableOutput("sdatat"), 
+                    status = "primary", solidHeader = TRUE,
+                    collapsible = TRUE, width = 12),
                   
-                  box(selectInput("ref", "Please select the reference covariate", choices = "Pending Upload"), width = 12),
+                  box(title = "Reference covariate",
+                    selectInput("ref", "Please select the reference covariate", choices = "Pending Upload"), status = "primary", solidHeader = TRUE,
+                    collapsible = TRUE, width = 12),
                   
-                  box(p(strong("Please select the file reporting the count data file")),
+                  box(title = "Input count data",
+                      p(strong("Please select the file reporting the count data file")),
                     shinyFilesButton("cdata", "Count data", "Please select a count data file", multiple = F, icon=icon("exclamation-circle")),
                     p(tags$br()),
-                    DT::dataTableOutput("cdatat"), width = 12),
+                    DT::dataTableOutput("cdatat"), status = "primary", solidHeader = TRUE,
+                    collapsible = TRUE, width = 12),
                   
-                  box(p(strong("Please select the output folder")),
-                    shinyDirButton("outf", "Output folder", "Please select the output folder", icon=icon("exclamation-circle")), width = 12)
+                  box(title = "Output folder", 
+                    p(strong("Please select the output folder")),
+                    shinyDirButton("outf", "Output folder", "Please select the output folder", icon=icon("exclamation-circle")), status = "primary", solidHeader = TRUE,
+                    collapsible = TRUE, width = 12)
                   
         )),
         
@@ -82,8 +82,10 @@ ui <- dashboardPage(
                 fluidRow(
                 box(h3("Datasets quality control"), width = 12),
                 box(includeMarkdown("./text/1_QC.md"), status = "info", width = 12),
-                box(p(strong("Run the automatic analysis")),
-                    actionButton("start_QC", "Waiting for input data", icon=icon("exclamation-circle")))
+                box(
+                    p(strong("Run the automatic analysis")),
+                    actionButton("start_QC", "Waiting for input data", icon=icon("exclamation-circle")), title="Automatic analysis", status = "primary", solidHeader = TRUE,
+                    collapsible = TRUE, width = 12)
         )),
       
         # Attribute analysis tab
@@ -92,8 +94,8 @@ ui <- dashboardPage(
                 box(h3("Analysis of the sample attributes"), width = 12),
                 box(includeMarkdown("./text/3_Attribute_analysis.md"), status = "info", width = 12),
                 box(p(strong("Run the automatic analysis")),
-                    actionButton("start_Attr", "Waiting for input data", icon=icon("exclamation-circle")),
-                    width = 12),
+                    actionButton("start_Attr", "Waiting for input data", icon=icon("exclamation-circle")), title="Automatic analysis", status = "primary", solidHeader = TRUE,
+                    collapsible = TRUE, width = 12),
                 box(selectInput("attrvar1", "Please select a covariate", choices = "Pending Upload"), 
                     p(strong("P-value from Kruskal-Wallis test")), textOutput("attrout1"), width=4),
                 box(plotlyOutput("attrplot1"), width=8))),
@@ -104,8 +106,8 @@ ui <- dashboardPage(
                 box(h3("PCA analysis of the sample attributes"), width = 12),
                 box(includeMarkdown("./text/7_PCA_analysis.md"), status = "info", width = 12),
                 box(p(strong("Run the automatic analysis")),
-                    actionButton("start_PCA", "Waiting for input data", icon=icon("exclamation-circle")),
-                    width = 12),
+                    actionButton("start_PCA", "Waiting for input data", icon=icon("exclamation-circle")), title="Automatic analysis", status = "primary", solidHeader = TRUE,
+                    collapsible = TRUE, width = 12),
                 box(selectInput("pcavar1", "Please select a covariate", choices = "Pending Upload"), 
                     p(strong("Explained variance")), textOutput("pcaout1"), width=4),
                 box(plotlyOutput("pcaplot1"), width=8)
@@ -119,8 +121,8 @@ ui <- dashboardPage(
                 box(p(strong("Run the automatic analysis")),
                     numericInput("rcor", "Correlation threshold", value = 0.6), 
                     numericInput("pcor", "Significance threshold", value = 0.05),
-                    actionButton("start_Corr", "Waiting for input data", icon=icon("exclamation-circle")),
-                    width = 12),
+                    actionButton("start_Corr", "Waiting for input data", icon=icon("exclamation-circle")), title="Automatic analysis", status = "primary", solidHeader = TRUE,
+                    collapsible = TRUE, width = 12),
                 box(selectInput("corvar1", "Please select a covariate", choices = "Pending Upload"), 
                     selectInput("corvar2", "Please select a covariate", choices = "Pending Upload"), 
                     p(strong("Results from Pearson correlation test")),
@@ -142,8 +144,8 @@ ui <- dashboardPage(
                     numericInput("pdiff", "Significance threshold", value = 0.05),
                     selectInput("ref2", "Please select the covariates to include in the model",
                                     choices = "Pending Upload", multiple = T),
-                    actionButton("start_Diff", "Waiting for input data", icon=icon("exclamation-circle")),
-                    width = 12)
+                    actionButton("start_Diff", "Waiting for input data", icon=icon("exclamation-circle")), title="Automatic analysis", status = "primary", solidHeader = TRUE,
+                    collapsible = TRUE, width = 12)
         )),
         
         # Prediction analysis tab

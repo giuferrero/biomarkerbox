@@ -6,7 +6,7 @@ library('filesstrings')
 ## Main arguments
 modality <- args[1] ## Analysis mode
 of <- args[2] ## Output folder
-sf = "../functions/" # folder containing the functions within docker
+sf = "./functions/" # folder containing the functions within docker
 
 ## Creation of a report folder
 report = paste0(of, "/0_Analysis_Reports/")
