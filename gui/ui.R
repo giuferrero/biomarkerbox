@@ -97,8 +97,13 @@ ui <- dashboardPage(
                     actionButton("start_Attr", "Waiting for input data", icon=icon("exclamation-circle")), title="Automatic analysis", status = "primary", solidHeader = TRUE,
                     collapsible = TRUE, width = 12),
                 box(selectInput("attrvar1", "Please select a covariate", choices = "Pending Upload"), 
-                    p(strong("P-value from Kruskal-Wallis test")), textOutput("attrout1"), width=4),
-                box(plotlyOutput("attrplot1"), width=8))),
+                    p(strong("P-value from Kruskal-Wallis test")), textOutput("attrout1"), 
+                    title="Box plot parameters", 
+                    status = "warning", solidHeader = TRUE,
+                    collapsible = TRUE, width = 4),
+                box(plotlyOutput("attrplot1"), title="Box plot", 
+                    status = "success", solidHeader = TRUE,
+                    collapsible = TRUE, width = 8))),
   
         # Correlation analysis tab
         tabItem(tabName = "PCA",
@@ -109,8 +114,13 @@ ui <- dashboardPage(
                     actionButton("start_PCA", "Waiting for input data", icon=icon("exclamation-circle")), title="Automatic analysis", status = "primary", solidHeader = TRUE,
                     collapsible = TRUE, width = 12),
                 box(selectInput("pcavar1", "Please select a covariate", choices = "Pending Upload"), 
-                    p(strong("Explained variance")), textOutput("pcaout1"), width=4),
-                box(plotlyOutput("pcaplot1"), width=8)
+                    p(strong("Explained variance")), textOutput("pcaout1"), 
+                    title="PCA parameters", 
+                    status = "warning", solidHeader = TRUE,
+                    collapsible = TRUE, width = 4),
+                box(plotlyOutput("pcaplot1"), title="PCA plot", 
+                    status = "success", solidHeader = TRUE,
+                    collapsible = TRUE, width = 8)
         )),
         
         # Correlation analysis tab
@@ -129,9 +139,13 @@ ui <- dashboardPage(
                     textOutput("corrout1"),
                     p(" "),
                     p(strong("Results from Spearman correlation test")),
-                    textOutput("corrout2"),
-                    width=4),
-                box(plotlyOutput("corplot1"), width=8)
+                    textOutput("corrout2"), 
+                    title="Correlation parameters", 
+                    status = "warning", solidHeader = TRUE,
+                    collapsible = TRUE, width = 4),
+                box(plotlyOutput("corplot1"), title="Correlation plot", 
+                    status = "success", solidHeader = TRUE,
+                    collapsible = TRUE, width = 8)
         )),
 
         # Differential analysis tab

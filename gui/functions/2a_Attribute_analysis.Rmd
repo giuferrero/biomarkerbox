@@ -37,7 +37,7 @@ dir.create(paste0(params$outfolder, "/02_Attribute_Analysis"))
 outf <- paste0(params$outfolder, "/02_Attribute_Analysis/")
 
 # Table containing the sample attributes
-phenoData <- read.delim(params$pdata, row.names=1, check.names = F)
+phenoData <- read.delim(params$pdata, row.names=1)
 
 # Identification of the levels of the reference sample attribute
 refcov <- params$refcov
@@ -71,7 +71,7 @@ rownames(out) <- names(phenoData)
 # Analysis cycled on each sample attribute
 for(j in 1:ncol(phenoData)){
     
-    totest <- data.frame(Data = phenoData[,j], refcov = phenoData[,refcov], check.names=F)
+    totest <- data.frame(Data = phenoData[,j], refcov = phenoData[,refcov])
     totest <- totest[complete.cases(totest),]  
   
     # Chi-square analysis and summary of categorical attributes
@@ -107,7 +107,7 @@ for(j in 1:ncol(phenoData)){
         sd1 <- round(sd(tosum$Data),2)
         out[j,i] <- paste(avg1, sd1, sep=" +/- ")}}}
 
-res <- data.frame(Attribute=row.names(out), out, check.names=F, row.names = NULL)
+res <- data.frame(Attribute=row.names(out), out, row.names = NULL)
 res <- res %>% filter(Attribute != refcov)
 
 res$p.value <- as.numeric(levels(res$p.value))[res$p.value]
@@ -275,7 +275,7 @@ for(i in 1:ncol(comparisons)){
       Summary_cov2[j] = paste(avg2, sd2, sep=" +/- ")}}
   
   # Creation of the output data
-  res <- data.frame(Attribute=names(phenoData), Summary_cov1, Summary_cov2, pvalue, check.names=F, row.names = NULL)
+  res <- data.frame(Attribute=names(phenoData), Summary_cov1, Summary_cov2, pvalue, row.names = NULL)
   res <- res %>% filter(Attribute != refcov)
   names(res) <- c("Attribute", cov1, cov2, "p.value")
 

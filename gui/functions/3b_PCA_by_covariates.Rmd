@@ -38,10 +38,10 @@ dir.create(paste0(params$outfolder, "/02_Attribute_Analysis"))
 outf <- paste0(params$outfolder, "/02_Attribute_Analysis/")
 
 # Table containing the covariates
-phenoData <- read.delim(params$pdata, row.names=1, check.names = F)
+phenoData <- read.delim(params$pdata, row.names=1)
 
 # Table containing the count data
-countData <- read.delim(params$cdata, row.names=1, check.names = F)
+countData <- read.delim(params$cdata, row.names=1)
 
 # Identification of the levels of the reference covariate
 cov_class <- levels(phenoData[,params$refcov])
@@ -57,7 +57,7 @@ countData <- round(countData, 0)
 countData <- countData[rowSums(countData) > 0, ]
 
 ### PC computation
-cdatat <- data.frame(t(countData), check.names = F)
+cdatat <- data.frame(t(countData))
 cdata.pca<-prcomp(log(cdatat+1,2), center=T, scale=T)
 
 imp <- summary(cdata.pca)$importance
@@ -82,7 +82,7 @@ dev.off()
 cat("\n\nThe following plot report the result of the PCA colored by the reference sample attribute **", params$refcov,"**. \n\n", sep="")
     
 cov <- phenoData[,params$refcov]
-dat <- data.frame(cbind(cov, cdatat), check.names=F)
+dat <- data.frame(cbind(cov, cdatat))
 names(dat)[1] <- params$refcov
 
 outplot <- autoplot(cdata.pca, data = dat, colour = params$refcov, size=3.5) +
@@ -100,7 +100,7 @@ for(i in 1:ncol(phenoData)){
   tempdf <- data.frame(phenoData)
   covid <- names(tempdf)[i]
   covid2 <- names(phenoData)[i]
-  dat <- data.frame(cbind(cov, cdatat), check.names=T)
+  dat <- data.frame(cbind(cov, cdatat))
   names(dat)[1] <- covid
   
 	pdf(paste0(outf,"PCA_Plot_PCA_count_data_colored_by_", covid2, ".pdf"), 7, 7)

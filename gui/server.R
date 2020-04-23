@@ -135,7 +135,7 @@ cdata.pca <- reactive({
     valsQC <- reactiveValues()
     valsQC$QC_out <- system(paste("Rscript RunBiomarkerBox.R QC", outf(), sdat(), cdat(), input$ref))
     
-    showModal(modalDialog("The analysis is completed", footer = modalButton("OK")))
+    showModal(modalDialog("The QC analysis is completed", footer = modalButton("OK")))
   })
   
 ###### Attribute analysis operations
@@ -147,7 +147,7 @@ cdata.pca <- reactive({
       
     valsAttr <- reactiveValues()
     valsAttr$Attr_out <- system(paste("Rscript RunBiomarkerBox.R Attribute", outf(), sdat(), input$ref))
-    showModal(modalDialog("The analysis is completed", footer = modalButton("OK")))    })
+    showModal(modalDialog("The attribute analysis is completed", footer = modalButton("OK")))    })
     
   attrvar1 <- reactive(input$attrvar1)
    
@@ -161,7 +161,6 @@ cdata.pca <- reactive({
     theme_bw() + 
     theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust=0.5)) +
     scale_fill_viridis(discrete=T)
-    #stat_compare_means(comparisons = totest_p, label = "p.signif", method = "wilcox.test", hide.ns=F)
     ))})
   
   output$attrout1 <- renderText(
@@ -186,7 +185,7 @@ cdata.pca <- reactive({
     valsPCA <- reactiveValues()
     valsPCA$PCA_out <- system(paste("Rscript RunBiomarkerBox.R PCA", outf(), sdat(), cdat(), input$ref))
     
-    showModal(modalDialog("The analysis is completed", footer = modalButton("OK")))  })  
+    showModal(modalDialog("The PCA analysis is completed", footer = modalButton("OK")))  })  
   
   pcavar1 <- reactive(input$pcavar1)
   
@@ -226,7 +225,7 @@ cdata.pca <- reactive({
     valsCorr <- reactiveValues()
     valsCorr$Corr_out <- system(paste("Rscript RunBiomarkerBox.R Correlation", outf(), sdat(), input$rcor, input$pcor))
     
-    showModal(modalDialog("The analysis is completed", footer = modalButton("OK")))    
+    showModal(modalDialog("The correlation analysis is completed", footer = modalButton("OK")))    
   })
   
   corvar1 <- reactive(input$corvar1)
@@ -274,7 +273,7 @@ cdata.pca <- reactive({
     valsDiff <- reactiveValues()
     valsDiff$Diff_out <- system(paste("Rscript RunBiomarkerBox.R DESeq2", outf(), sdat(), input$ref, input$ldiff, input$pdiff, input$ref2))
     
-    showModal(modalDialog("The analysis is completed", footer = modalButton("OK")))    
+    showModal(modalDialog("The DESeq2 analysis is completed", footer = modalButton("OK")))    
   })
   
 ###### Machine Learning analysis operations

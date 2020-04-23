@@ -242,7 +242,7 @@ dev.off()
 if(nrow(de)>0){
 
 covid <- as.character(de$ID[1])
-totest <- data.frame(Class=phenoData[,refcov], value=t(norm[as.character(covid),]), check.names=F)
+totest <- data.frame(Class=phenoData[,refcov], value=t(norm[as.character(covid),]))
 totest[,1] <- factor(totest[,1], levels = totest[,1])
 totest[,2] <- log10(totest[,2]+1)
 
