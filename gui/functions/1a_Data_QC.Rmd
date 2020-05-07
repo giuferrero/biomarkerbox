@@ -24,21 +24,21 @@ outf = paste0(params$outfolder, "/01_QC_and_Data_Preprocessing/")
 dir.create(outf)
 
 # Table containing the covariates
-phenoData <- read.delim(params$pdata, row.names=1)
+phenoData <- read.delim(params$pdata, row.names=1, check.names=F)
 
 # Table containing the count data
-countData <- read.delim(params$cdata, row.names=1)
+countData <- read.delim(params$cdata, row.names=1, check.names=F)
+refcov <- names(phenoData)[as.numeric(params$refcov)]
 
 # Identification of the levels of the reference covariate
-refcov <- params$refcov
-cov_class <- levels(phenoData[,refcov])
+cov_class <- levels(phenoData[, refcov])
 ```
 
 ```{r setup, include=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
 # Check if the required packages are installed and load them
 knitr::opts_chunk$set(echo = TRUE)
 
-packages <- c("dplyr", "ggplot2")
+packages <- c("dplyr", "ggplot2", "DataExplorer")
 
 for(i in 1:length(packages)){
   if(packages[i] %in% rownames(installed.packages()) == FALSE)
@@ -99,7 +99,6 @@ if(sum(is.na(countData)) == 0){
 }
 outhead <- "QC report: NA values analysis\n"
 ```
-
 `r paste(outp, outc, sep="\n")`
 
 ## Check for the presence of non numeric values in the count table
@@ -117,6 +116,26 @@ if(sum(!sapply(countData, is.numeric)) == 0){
 }
 ```
 `r paste(outc)`
+
+The following plot summarizes the data of file **`r basename(params$pdata)`**.
+
+```{r sumsdata, echo=FALSE, message=FALSE, warning=FALSE, results="asis"}
+p <- plot_intro(phenoData)
+
+  pdf(paste0(outf,"QC_Summary_phenoData.pdf"))
+  print(p)
+  dev.off()
+```
+
+The following plot summarizes the data of file **`r basename(params$cdata)`**.
+
+```{r sumcdata, echo=FALSE, message=FALSE, warning=FALSE, results="asis"}
+p <- plot_intro(countData)
+
+  pdf(paste0(outf,"QC_Summary_countData.pdf"))
+  print(p)
+  dev.off()
+```
 
 ## Check for normal distribution
 The distribution of the numeric attributes of the sample table were checked for normality using the Shapiro-Wilk test.
@@ -192,21 +211,21 @@ if(length(outlier_attr)>0){
 for(i in 1:length(outlier_attr)){
   var <- outlier_attr[i]
   
-  p <- ggplot(phenoData_num, aes(x = phenoData_num[,var])) + geom_density(colour="black", fill="white", alpha=0.8) + geom_rug(alpha=0.05) + theme_bw() + labs(x=var) + ggtitle(paste0("Distribution of the ", var, " attribute"))
+  p <- ggplot(phenoData_num, aes(x = phenoData_num[,var])) + geom_boxplot(colour="black", fill="white", alpha=0.8) + geom_rug(alpha=0.05) + theme_bw() + labs(x=var) + ggtitle(paste0("Distribution of the ", var, " attribute"))
   
-  pdf(paste0(outf,"Preprocessing_Plot_Outlier_analysis_histogram_", var, ".pdf"))
+  pdf(paste0(outf,"Preprocessing_Plot_Outlier_analysis_boxplot_", var, ".pdf"))
   print(p)
   dev.off()
 }}
 ```
 
-An output file named **Preprocessing_Table_Outlier_analysis.txt** is provided reporting, if present, the outlier values identified with computation of the mean of each attribute with or without outliers. If present, for each attribute presenting an outlier, an histogram plot names **Preprocessing_Plot_Outlier_analysis_histogram_(attribute).pdf** (attribute = identifier of the attribute considered) was provided.
+An output file named **Preprocessing_Table_Outlier_analysis.txt** is provided reporting, if present, the outlier values identified with computation of the mean of each attribute with or without outliers. If present, for each attribute presenting an outlier, a box plot named **Preprocessing_Plot_Outlier_analysis_boxplot_(attribute).pdf** (attribute = identifier of the attribute considered) was provided.
 
 ## Output files
 The following output files were generated:
 
 * Preprocessing_Table_Normal_distribution_analysis.txt
 * Preprocessing_Table_Outlier_analysis.txt
-* Preprocessing_Plot_Outlier_analysis_histogram_(attribute).pdf (attribute = identifier of the attribute considered)
+* Preprocessing_Plot_Outlier_analysis_boxplot_(attribute).pdf (attribute = identifier of the attribute considered)
 
 All the output file were generated in the folder **01_QC_and_Data_Preprocessing**

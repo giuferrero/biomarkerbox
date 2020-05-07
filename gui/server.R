@@ -34,6 +34,19 @@ server <- function(input, output, session) {
     return(parseDirPath(volumes, input$outf))
   })
   
+  output$sdatatext <- renderText({sdat()})
+  output$cdatatext <- renderText({cdat()})
+  output$outftext <- renderText({outf()})
+  output$test <- renderText({refpos()})
+  
+  output$ibox <- renderInfoBox({
+    infoBox(
+      "Reference covariate:",
+      input$ref,
+      icon = icon("credit-card")
+    )
+  })
+  
   ### Input check for running the analysis
   observe({
     req(input$sdata)
@@ -52,6 +65,7 @@ server <- function(input, output, session) {
     updateActionButton(session, "outf",
                        icon = icon("check-circle"))  
   })
+  
 
   ### Input check for running the analysis
   observe({
@@ -84,45 +98,53 @@ server <- function(input, output, session) {
   output$sdatat <- DT::renderDataTable({
     if(is.null(sdat())){
     return(NULL)}
-    updateSelectInput(session, "ref", choices = names(read.delim(sdat(), check.names = F, row.names=1)))
-    updateSelectInput(session, "ref2", choices = names(read.delim(sdat(), check.names = F, row.names=1)))
-    updateSelectInput(session, "attrvar1", choices = names(read.delim(sdat(), check.names = F, row.names=1)))
-    updateSelectInput(session, "corvar1", choices = names(read.delim(sdat(), check.names = F, row.names=1)))
-    updateSelectInput(session, "corvar2", choices = names(read.delim(sdat(), check.names = F, row.names=1)))
-    updateSelectInput(session, "pcavar1", choices = names(read.delim(sdat(), check.names = F, row.names=1)))
-    return(DT::datatable(read.delim(sdat(), check.names = F, row.names=1), filter = 'none', options = list(scrollX=T, autoWidth = TRUE, pageLength = 5)))
+    updateSelectInput(session, "ref", choices = names(read.delim(sdat(), row.names=1, check.names=F)))
+    updateSelectInput(session, "ref2", choices = names(read.delim(sdat(), row.names=1, check.names=F)))
+    updateSelectInput(session, "attrvar1", choices = names(
+      Filter(is.numeric, read.delim(sdat(), row.names=1, check.names=F))))
+    updateSelectInput(session, "corvar1", choices = names(
+      Filter(is.numeric, read.delim(sdat(), row.names=1, check.names=F))))
+    updateSelectInput(session, "corvar2", choices = names(
+      Filter(is.numeric, read.delim(sdat(), row.names=1, check.names=F))))
+    updateSelectInput(session, "pcavar1", choices = names(read.delim(sdat(), row.names=1, check.names=F)))
+    return(DT::datatable(read.delim(sdat(), row.names=1), filter = 'none', options = list(scrollX=T, autoWidth = TRUE, pageLength = 5)))
     })
   
   output$cdatat <- DT::renderDataTable({
     if(is.null(cdat())){return(NULL)}
-    DT::datatable(read.delim(cdat(), check.names = F, row.names=1), filter = 'none', options = list(scrollX=T, autoWidth = TRUE, pageLength = 5))})
+    DT::datatable(read.delim(cdat(), row.names=1, check.names=F), filter = 'none', options = list(scrollX=T, autoWidth = TRUE, pageLength = 5))})
   
 ##### Load input data
 sdata <- reactive({
-req(input$sdata)
+  req(input$sdata)
+  sdata <- read.delim(sdat(), row.names=1, check.names=F)
+})
 
-sdata <- read.delim(sdat(), check.names=F, row.names=1)
+refpos <- reactive({
+  req(input$sdata)
+  req(input$ref)
+  refpos <- match(input$ref, names(sdata()))
+})
 
+ref2pos <- reactive({
+  req(input$sdata)
+  req(input$ref2)
+  refpos <- match(input$ref2, names(sdata()))
 })
 
 cdata <- reactive({
   req(input$cdata)
-  
-  sdata <- read.delim(cdat(), check.names=F, row.names=1)
-  
+  sdata <- read.delim(cdat(), row.names=1, check.names=F)
 })
 
 cdata.pca <- reactive({
   req(input$cdata)
   req(input$sdata)
-  
   cdata <- cdata()[, row.names(sdata())]
-  
   cdata.pca <- prcomp(log(t(cdata)+1,2), center=T, scale=T)
   cdata.pca <- cbind(cdata.pca$x, sdata())
-  
 })
-  
+
 ###### QC operations
   
   observeEvent(input$start_QC, {
@@ -133,10 +155,18 @@ cdata.pca <- reactive({
     req(input$cdata)
     
     valsQC <- reactiveValues()
-    valsQC$QC_out <- system(paste("Rscript RunBiomarkerBox.R QC", outf(), sdat(), cdat(), input$ref))
+    valsQC$QC_out <- system(paste("Rscript RunBiomarkerBox.R QC", outf(), sdat(), cdat(), refpos()))
     
     showModal(modalDialog("The QC analysis is completed", footer = modalButton("OK")))
   })
+  
+  QCvar1 <- reactive(input$QCvar1)
+  
+  output$attrplot1 <- renderPlotly({
+    print(ggplotly(
+      plot_intro(QCvar1())  + 
+        theme_bw()
+    ))})
   
 ###### Attribute analysis operations
     observeEvent(input$start_Attr, {
@@ -146,7 +176,7 @@ cdata.pca <- reactive({
       req(input$outf)
       
     valsAttr <- reactiveValues()
-    valsAttr$Attr_out <- system(paste("Rscript RunBiomarkerBox.R Attribute", outf(), sdat(), input$ref))
+    valsAttr$Attr_out <- system(paste("Rscript RunBiomarkerBox.R Attribute", outf(), sdat(), refpos()))
     showModal(modalDialog("The attribute analysis is completed", footer = modalButton("OK")))    })
     
   attrvar1 <- reactive(input$attrvar1)
@@ -183,7 +213,7 @@ cdata.pca <- reactive({
     req(input$cdata)
     
     valsPCA <- reactiveValues()
-    valsPCA$PCA_out <- system(paste("Rscript RunBiomarkerBox.R PCA", outf(), sdat(), cdat(), input$ref))
+    valsPCA$PCA_out <- system(paste("Rscript RunBiomarkerBox.R PCA", outf(), sdat(), cdat(), refpos()))
     
     showModal(modalDialog("The PCA analysis is completed", footer = modalButton("OK")))  })  
   
@@ -271,7 +301,7 @@ cdata.pca <- reactive({
     req(input$cdata)
     
     valsDiff <- reactiveValues()
-    valsDiff$Diff_out <- system(paste("Rscript RunBiomarkerBox.R DESeq2", outf(), sdat(), input$ref, input$ldiff, input$pdiff, input$ref2))
+    valsDiff$Diff_out <- system(paste("Rscript RunBiomarkerBox.R DESeq2", outf(), sdat(), cdat(), refpos(), ref2pos(), input$ldiff, input$pdiff))
     
     showModal(modalDialog("The DESeq2 analysis is completed", footer = modalButton("OK")))    
   })

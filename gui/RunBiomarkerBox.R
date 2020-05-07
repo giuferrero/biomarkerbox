@@ -41,7 +41,7 @@ if(modality == "QC"){
 }else if(modality == "DESeq2"){
   
   # Execution of the DESeq2 analysis
-  rmarkdown::render(paste0(sf,"3a_DESeq2.Rmd"), params = list(outfolder=of, pdata = args[2], cdata = args[3], refcov = args[4], covtomodel=args[5], logfcthreshold=args[6], pvalthreshold=args[7]), output_format="all")
+  rmarkdown::render(paste0(sf,"3a_DESeq2.Rmd"), params = list(outfolder=of, pdata = args[3], cdata = args[4], refcov = args[5], covtomodel=args[6], logfcthreshold=args[7], pvalthreshold=args[8]), output_format="all")
   moveout("3a_DESeq2")
   
 }else if(modality == "PCA"){

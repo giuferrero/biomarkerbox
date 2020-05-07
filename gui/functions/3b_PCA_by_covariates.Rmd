@@ -44,6 +44,7 @@ phenoData <- read.delim(params$pdata, row.names=1)
 countData <- read.delim(params$cdata, row.names=1)
 
 # Identification of the levels of the reference covariate
+refcov <- names(phenoData)[as.numeric(params$refcov)]
 cov_class <- levels(phenoData[,params$refcov])
 ```
 

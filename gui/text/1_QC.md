@@ -16,8 +16,10 @@ All the report files will be generated in the folder **0_Analysis_Reports**
 
 The following output files will be generated:
 
+* QC_Summary_phenoData.pdf
+* QC_Summary_countData.pdf
 * Preprocessing_Table_Normal_distribution_analysis.txt
 * Preprocessing_Table_Outlier_analysis.txt
-* Preprocessing_Plot_Outlier_analysis_histogram_attribute.pdf - attribute is the identifier of the attribute considered
+* Preprocessing_Plot_Outlier_analysis_boxplot_attribute.pdf - attribute is the id of the attribute considered
 
 All the output files will be generated in the folder **01_QC_and_Data_Preprocessing**

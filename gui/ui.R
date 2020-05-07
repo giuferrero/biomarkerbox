@@ -9,7 +9,7 @@
 
 source("utils.R")
 
-packages <- c("markdown", "shinyFiles", "shiny", "fs", "ggplot2", "ggthemes", "plotly", "reshape", "viridis", "ggfortify", "corrplot", "Hmisc", "dplyr", "DESeq2")
+packages <- c("markdown", "shinyFiles", "shiny", "fs", "ggplot2", "ggthemes", "plotly", "reshape", "viridis", "ggfortify", "corrplot", "Hmisc", "dplyr", "DESeq2", "DataExplorer")
 
 invisible(lapply(packages, library, character.only = TRUE))
 
@@ -55,6 +55,9 @@ ui <- dashboardPage(
                     p(strong("Please select a sample data file")),
                     shinyFilesButton("sdata", label="Sample data", title="Please select a sample data file", multiple = F, icon=icon("exclamation-circle")),
                     p(tags$br()),
+                    p(strong("File name")),
+                    verbatimTextOutput("sdatatext", placeholder = T),
+                    p(tags$br()),
                     DT::dataTableOutput("sdatat"), 
                     status = "primary", solidHeader = TRUE,
                     collapsible = TRUE, width = 12),
@@ -64,15 +67,22 @@ ui <- dashboardPage(
                     collapsible = TRUE, width = 12),
                   
                   box(title = "Input count data",
-                      p(strong("Please select the file reporting the count data file")),
+                    p(strong("Please select the file reporting the count data file")),
                     shinyFilesButton("cdata", "Count data", "Please select a count data file", multiple = F, icon=icon("exclamation-circle")),
+                    p(tags$br()),
+                    p(strong("File name")),
+                    verbatimTextOutput("cdatatext", placeholder = T),
                     p(tags$br()),
                     DT::dataTableOutput("cdatat"), status = "primary", solidHeader = TRUE,
                     collapsible = TRUE, width = 12),
                   
                   box(title = "Output folder", 
                     p(strong("Please select the output folder")),
-                    shinyDirButton("outf", "Output folder", "Please select the output folder", icon=icon("exclamation-circle")), status = "primary", solidHeader = TRUE,
+                    shinyDirButton("outf", "Output folder", "Please select the output folder", icon=icon("exclamation-circle")),
+                    p(tags$br()),
+                    p(strong("Folder name")),
+                    verbatimTextOutput("outftext", placeholder = T),
+                    status = "primary", solidHeader = TRUE,
                     collapsible = TRUE, width = 12)
                   
         )),
@@ -80,13 +90,21 @@ ui <- dashboardPage(
         # QC tab
         tabItem(tabName = "qc",
                 fluidRow(
-                box(h3("Datasets quality control"), width = 12),
+                box(h3("Datasets quality control"), width = 6, height = 89),
+                infoBoxOutput("ibox", width = 6),
                 box(includeMarkdown("./text/1_QC.md"), status = "info", width = 12),
                 box(
                     p(strong("Run the automatic analysis")),
                     actionButton("start_QC", "Waiting for input data", icon=icon("exclamation-circle")), title="Automatic analysis", status = "primary", solidHeader = TRUE,
-                    collapsible = TRUE, width = 12)
-        )),
+                    collapsible = TRUE, width = 12),
+                
+                box(selectInput("QCvar1", "Please select a table", choices = "Pending Upload"),
+                    title="QC summary parameters", 
+                    status = "warning", solidHeader = TRUE,
+                    collapsible = TRUE, width = 4),
+                box(plotlyOutput("QCplot1"), title="QC summary", 
+                    status = "success", solidHeader = TRUE,
+                    collapsible = TRUE, width = 8))),
       
         # Attribute analysis tab
         tabItem(tabName = "attr",

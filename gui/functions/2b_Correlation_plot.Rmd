@@ -27,6 +27,8 @@ for(i in 1:length(packages)){
   if(packages[i] %in% rownames(installed.packages()) == FALSE)
     install.packages(packages[i])
 }
+
+invisible(lapply(packages, library, character.only = TRUE))
 ```
 
 ```{r reading, echo=FALSE, message=FALSE, warning=FALSE, results="asis", comment=NA}
@@ -35,7 +37,8 @@ dir.create(paste0(params$outfolder, "/02_Attribute_Analysis"))
 outf <- paste0(params$outfolder, "/02_Attribute_Analysis/")
 
 # Table containing the sample attributes
-phenoData <- read.delim(params$pdata, row.names=1)
+phenoData <- read.delim(params$pdata, row.names=1, check.names=F)
+refcov <- names(phenoData)[as.numeric(params$refcov)]
 ```
 
 ```{r norm, echo=FALSE, message=FALSE, warning=FALSE, results="asis", comment=NA}
